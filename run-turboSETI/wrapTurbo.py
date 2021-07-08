@@ -13,7 +13,7 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
 
     returns : outputs .dat files from turboSETI
     '''
-
+    
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -58,10 +58,10 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
         # fd.search(n_partitions=32)
         #
         # # End timer and write to spreadsheet if time is true
-         if t:
-             runtime = time.time() - start
-             print()
-             print(f'{target[ii]} Runtime : {runtime}')
+        if t:
+            runtime = time.time() - start
+            print()
+            print('{} Runtime : {}'.format(target[ii], runtime))
             #fileinfo.iloc[ii, 9] = runtime
 
         # # Write outfile path to dataframe

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 # Tunable Params
-nnodes = 64
+nnodes = 8
 
 start = time.time()
 
@@ -43,8 +43,10 @@ cn = cn[:nnodes]
 # Run on separate compute nodes
 ps = []
 for ii, kk in enumerate(ii2D):
-    #print(f'-ii {kk}')
-    cmd = ['ssh', cn[ii], 'python3', './BL-TESSsearch/run-turboSETI/wrapTurbo.py', f'--ii {kk}']
+
+    condaenv = '/home/noahf/miniconda3/etc/profile.d/conda.sh'
+    scPath = './BL-TESSsearch/run-turboSETI/wrapTurbo.py'
+    cmd = ['ssh', cn[ii], 'source', condaenv, 'conda', 'activate', 'runTurbo', 'python3', scPath, f'--ii {kk}']
 
     p = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
     print(p.stderr.readlines())
