@@ -42,7 +42,7 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
             start = time.time()
 
         # Set up output subdirectory
-        outdir = os.path.join(outDir, f'TOI-{tois[ii]}')
+        outdir = os.path.join(outDir, 'TOI-{}'.format(tois[ii]))
 
         # for now just
         print("it's working!!")
@@ -61,7 +61,7 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
          if t:
              runtime = time.time() - start
              print()
-             print(f'{target[ii]} Runtime : {runtime}')
+             print('{} Runtime : {}'.format(target[ii], runtime)
     #         fileinfo.iloc[ii, 9] = runtime
     #
     #     # Write outfile path to dataframe
