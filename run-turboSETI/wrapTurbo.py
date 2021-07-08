@@ -24,7 +24,6 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
         iis = np.array(iis)
 
     # Read in spreadsheet for files not run through TurboSETI
-    #filepath = os.path.join(os.getcwd(), infilename)
     fileinfo = pd.read_csv(infilepath)
 
     # Select necessary columns
@@ -43,9 +42,6 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
 
         # Set up output subdirectory
         outdir = os.path.join(outDir, 'TOI-{}'.format(tois[ii]))
-
-        # for now just
-        print("it's working!!")
 
         # Uncomment to run turboSETI
 
