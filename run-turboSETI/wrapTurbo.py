@@ -49,29 +49,29 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
 
         # Uncomment to run turboSETI
 
-    #     # Make out directory if it doesn't exist
-    #     if not os.path.exists(outdir):
-    #         os.makedirs(outdir)
-    #
-    #     # Run turboSETI
-    #     fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
-    #     fd.search(n_partitions=32)
-    #
-    #     # End timer and write to spreadsheet if time is true
+        # # Make out directory if it doesn't exist
+        # if not os.path.exists(outdir):
+        #     os.makedirs(outdir)
+        #
+        # # Run turboSETI
+        # fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
+        # fd.search(n_partitions=32)
+        #
+        # # End timer and write to spreadsheet if time is true
          if t:
              runtime = time.time() - start
              print()
              print(f'{target[ii]} Runtime : {runtime}')
-    #         fileinfo.iloc[ii, 9] = runtime
-    #
-    #     # Write outfile path to dataframe
-    #     name = filenames[ii].split('.')[0] + '.dat'
-    #     fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
-    #
-    #     # Update spreadsheet to reflect turboSETI run
-    #     fileinfo.iloc[ii, 8] = 'TRUE'
-    #
-    # fileinfo.to_csv(filepath, index=False)
+            #fileinfo.iloc[ii, 9] = runtime
+
+        # # Write outfile path to dataframe
+        # name = filenames[ii].split('.')[0] + '.dat'
+        # fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
+        #
+        # # Update spreadsheet to reflect turboSETI run
+        # fileinfo.iloc[ii, 8] = 'TRUE'
+
+    #fileinfo.to_csv(filepath, index=False)
 
     time.sleep(1)
 
