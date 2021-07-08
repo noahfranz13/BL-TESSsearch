@@ -55,7 +55,6 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
         # # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
-            print()
             print('{} Runtime : {}'.format(target[ii], runtime))
             fileinfo.iloc[ii, 9] = runtime
 
@@ -64,11 +63,13 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
         fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
 
         # Update spreadsheet to reflect turboSETI run
-        fileinfo.iloc[ii, 8] = 'TRUE'
+        fileinfo.iloc[ii, 8] = True
+
+    time.sleep(5)
 
     fileinfo.to_csv(infilepath, index=False)
 
-    time.sleep(1)
+    
 
 
 def main():

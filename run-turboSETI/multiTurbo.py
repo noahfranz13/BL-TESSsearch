@@ -75,6 +75,10 @@ def splitRun(nnodes, debug, infile, t, outDir, splicedonly):
     if t:
         print(time.time()-start)
 
+    if debug:
+        outdata = pd.read_csv(filepath)
+        print(outdata)
+    
 def main():
     '''
     Run turboSETI in parallel across multiple compute nodes on GBT
