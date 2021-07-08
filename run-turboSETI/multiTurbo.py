@@ -4,7 +4,7 @@ import subprocess as sp
 import numpy as np
 import pandas as pd
 
-def splitRun(nnodes, debug, infile, t, outDir):
+def splitRun(nnodes, debug, infile, t, outDir, splicedonly):
 
     if t:
         start = time.time()
@@ -19,8 +19,13 @@ def splitRun(nnodes, debug, infile, t, outDir):
         print(f'infile: {fileinfo}')
 
     # Only select files that haven't been run through turboSETI
-    turbo = fileinfo['TurboSETI?'].to_numpy()
-    iis = np.where(turbo == False)[0]
+    turbo   = fileinfo['TurboSETI?'].to_numpy()
+    spliced = fileinfo['SPLICED?'].to_numpy()
+
+    if splicedonly:
+        iis = np.where((turbo == False) * (spliced == 'spliced'))[0]
+    else:
+        iis = np.where(turbo == False)[0]
 
     if debug:
         print(f'indexes used: {iis}')
@@ -103,9 +108,10 @@ def main():
     parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax/scratch/noahf/turboSETI-outFiles')
+    parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.infile, args.timer)
+    splitRun(args.nnodes, args.debug, args.infile, args.timer, args.outdir, args.splicedonly)
 
 if __name__ == '__main__':
     sys.exit(main())

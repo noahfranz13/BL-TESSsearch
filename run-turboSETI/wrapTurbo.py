@@ -31,7 +31,6 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
     filenames   = fileinfo['FILE NAME'].to_numpy()
     target      = fileinfo['TARGET NAME'].to_numpy()
     tois        = fileinfo['TOI'].to_numpy()
-    spliced     = fileinfo['SPLICED?'].to_numpy()
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
