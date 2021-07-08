@@ -13,7 +13,7 @@ def wrap_turboSETI(iis, infile, outDir, t=True):
 
     returns : outputs .dat files from turboSETI
     '''
-    
+
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -62,16 +62,16 @@ def wrap_turboSETI(iis, infile, outDir, t=True):
             runtime = time.time() - start
             print()
             print('{} Runtime : {}'.format(target[ii], runtime))
-            #fileinfo.iloc[ii, 9] = runtime
+            fileinfo.iloc[ii, 9] = runtime
 
-        # # Write outfile path to dataframe
-        # name = filenames[ii].split('.')[0] + '.dat'
-        # fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
-        #
-        # # Update spreadsheet to reflect turboSETI run
-        # fileinfo.iloc[ii, 8] = 'TRUE'
+        # Write outfile path to dataframe
+        name = filenames[ii].split('.')[0] + '.dat'
+        fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
 
-    #fileinfo.to_csv(filepath, index=False)
+        # Update spreadsheet to reflect turboSETI run
+        fileinfo.iloc[ii, 8] = 'TRUE'
+
+    fileinfo.to_csv(filepath, index=False)
 
     time.sleep(1)
 
