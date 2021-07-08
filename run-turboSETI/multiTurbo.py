@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 
 # Tunable Params
-nnodes = 8
+nnodes = 64
+debug = False
 
 start = time.time()
 
@@ -44,13 +45,16 @@ cn = cn[:nnodes]
 ps = []
 for ii, kk in enumerate(ii2D):
 
-    #condaenv = '/home/noahf/miniconda3/etc/profile.d/conda.sh'
+    condaenv = '~/miniconda3/bin/activate' # '/home/noahf/miniconda3/etc/profile.d/conda.sh'
     
-    cmd = ['ssh', cn[ii], 'python3',  f'python3 ./BL-TESSsearch/run-turboSETI/wrapTurbo.py --ii {kk}'] #f'source {condaenv}', 'conda activate runTurbo']
+    cmd = ['ssh', cn[ii], f"source {condaenv} runTurbo ; python3 ./BL-TESSsearch/run-turboSETI/wrapTurbo.py --ii '{kk}'"]
 
-    p = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-    print(p.stdout.readlines(), p.stderr.readlines())
-    ps.append(p)
+    ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    if debug:
+        print(ssh.stdout.readlines(), ssh.stderr.readlines())
+
+    ps.append(ssh)
 
 for p in ps:
     p.communicate()
