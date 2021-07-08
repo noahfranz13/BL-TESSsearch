@@ -44,12 +44,12 @@ cn = cn[:nnodes]
 ps = []
 for ii, kk in enumerate(ii2D):
 
-    condaenv = '/home/noahf/miniconda3/etc/profile.d/conda.sh'
-    scPath = './BL-TESSsearch/run-turboSETI/wrapTurbo.py'
-    cmd = ['ssh', cn[ii], 'source', condaenv, 'conda', 'activate', 'runTurbo', 'python3', scPath, f'--ii {kk}']
+    #condaenv = '/home/noahf/miniconda3/etc/profile.d/conda.sh'
+    
+    cmd = ['ssh', cn[ii], 'python3',  f'python3 ./BL-TESSsearch/run-turboSETI/wrapTurbo.py --ii {kk}'] #f'source {condaenv}', 'conda activate runTurbo']
 
-    p = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    print(p.stderr.readlines())
+    p = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+    print(p.stdout.readlines(), p.stderr.readlines())
     ps.append(p)
 
 for p in ps:
