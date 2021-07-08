@@ -15,9 +15,15 @@ def splitRun(nnodes, debug, infile, t):
     filepath = os.path.join(cwd, infile)
     fileinfo = pd.read_csv(filepath)
 
+    if debug:
+        print(f'infile: {fileinfo}')
+
     # Only select files that haven't been run through turboSETI
     turbo = fileinfo['TurboSETI?'].to_numpy()
     iis = np.where(turbo == False)[0]
+
+    if debug:
+        print(f'indexes used: {iis}')
 
     # Split array of indexes into 2D array to run on separate cores
     if len(iis)%nnodes == 0:

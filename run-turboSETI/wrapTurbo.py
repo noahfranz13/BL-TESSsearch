@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 
-def wrap_turboSETI(iis, infile, outDir, t=True):
+def wrap_turboSETI(iis, infilepath, outDir, t=True):
     '''
     iis : numpy array of indexes to run through
-    infile : csv file path of filepaths and if it has run through turboSETI
+    infilepath : csv file path of filepaths and if it has run through turboSETI
     outDir : directory to store output subdirectories
     t : boolean, if true runtime is written to spreadsheet
 
@@ -25,7 +25,7 @@ def wrap_turboSETI(iis, infile, outDir, t=True):
 
     # Read in spreadsheet for files not run through TurboSETI
     #filepath = os.path.join(os.getcwd(), infilename)
-    fileinfo = pd.read_csv(infile)
+    fileinfo = pd.read_csv(infilepath)
 
     # Select necessary columns
     filepaths   = fileinfo['FILE PATH'].to_numpy()
@@ -71,7 +71,7 @@ def wrap_turboSETI(iis, infile, outDir, t=True):
         # Update spreadsheet to reflect turboSETI run
         fileinfo.iloc[ii, 8] = 'TRUE'
 
-    fileinfo.to_csv(filepath, index=False)
+    fileinfo.to_csv(infilepath, index=False)
 
     time.sleep(1)
 
