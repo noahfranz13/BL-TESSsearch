@@ -42,7 +42,7 @@ def wrap_turboSETI(iis, infilename, outDir, t=True):
             start = time.time()
 
         # Set up output subdirectory
-        outdir = os.path.join(outDir, f'TOI-{tois[ii]}')
+        outdir = os.path.join(outDir, 'TOI-{}'.format(tois[ii]))
 
         # for now just
         print("it's working!!")

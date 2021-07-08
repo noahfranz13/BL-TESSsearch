@@ -14,14 +14,13 @@ fileinfo = pd.read_csv(filepath)
 
 # Only select files that haven't been run through turboSETI
 turbo = fileinfo['TurboSETI?'].to_numpy()
-iis = np.where(turbo == 'FALSE')[0]
+iis = np.where(turbo == False)[0]
 
 # Split array of indexes into 2D array to run on separate cores
 if len(iis)%nnodes == 0:
     ii2D = np.reshape(iis, (nnodes, -1))
 else:
     nleft = len(iis)%nnodes
-    print(nleft)
     ii2D = np.reshape(iis[:-nleft], (nnodes, -1)).tolist()
     for k in range(nleft):
         ii2D[k].append(iis[-(k+1)])
@@ -44,10 +43,11 @@ cn = cn[:nnodes]
 # Run on separate compute nodes
 ps = []
 for ii, kk in enumerate(ii2D):
-
+    #print(f'-ii {kk}')
     cmd = ['ssh', cn[ii], 'python3', './BL-TESSsearch/run-turboSETI/wrapTurbo.py', f'--ii {kk}']
 
     p = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    print(p.stderr.readlines())
     ps.append(p)
 
 for p in ps:
