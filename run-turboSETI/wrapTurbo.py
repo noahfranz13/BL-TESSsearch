@@ -27,16 +27,17 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
     # Read in mysql database
     db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                         password=os.environ['GCP_PASS'], database='FileTracking')
+
     if test:
-        query = '''
-                SELECT turboSETI, splice
-                FROM infiles_test
-                '''
+        sqlTable = 'infiles_test'
     else:
-        query = '''
-                SELECT turboSETI, splice
-                FROM infiles
-                '''
+        sqlTable = 'infiles'
+
+    query = f'''
+            SELECT turboSETI, splice
+            FROM {sqlTable}
+            '''
+
     fileinfo = pd.read_sql(query, db)
 
     # Also initiate cursor for updating the table later
@@ -73,16 +74,16 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         if t:
             runtime = time.time() - start
             print('{} Runtime : {}'.format(target[ii], runtime))
-            sqlcmd0 = f"UPDATE infiles SET runtime={runtime} WHERE row_num={ii}"
+            sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
 
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
-        sqlcmd1 = f"UPDATE infiles SET outpath={os.path.join(outdir, name)} WHERE row_num={ii}"
+        sqlcmd1 = f"UPDATE {sqlTable} SET outpath={os.path.join(outdir, name)} WHERE row_num={ii}"
         cursor.execute(sqlcmd1)
 
         # Update spreadsheet to reflect turboSETI run
-        sqlcmd2 = f"UPDATE infiles SET turboSETI='TRUE' WHERE row_num={ii}"
+        sqlcmd2 = f"UPDATE {sqlTable} SET turboSETI='TRUE' WHERE row_num={ii}"
         cursor.execute(sqlcmd2)
 
         # commit database changes

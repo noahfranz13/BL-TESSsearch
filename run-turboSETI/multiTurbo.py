@@ -17,7 +17,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
 
     if debug:
         query = '''
-                SELECT turboSETI, splice
+                SELECT row_num, turboSETI, splice
                 FROM infiles_test
                 '''
     else:
@@ -36,9 +36,9 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
     spliced = fileinfo['splice'].to_numpy()
 
     if splicedonly:
-        iis = np.where((turbo == False) * (spliced == 'spliced'))[0]
+        iis = np.where((turbo == 'FALSE') * (spliced == 'spliced'))[0]
     else:
-        iis = np.where(turbo == False)[0]
+        iis = np.where(turbo == 'FALSE')[0]
 
     if debug:
         print(f'indexes used: {iis}')
@@ -70,6 +70,8 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
     cn = np.flip(cn)
     cn = cn[:nnodes]
 
+    print(f'Running on compute nodes {min(cn)} to {max(cn)}')
+
     # Run on separate compute nodes
     ps = []
     for ii, node in zip(ii2D, cn):
@@ -77,9 +79,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
         condaenv = '~/miniconda3/bin/activate'
 
         cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
-
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-
         ps.append(ssh)
 
     for p in ps:
@@ -87,10 +87,6 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
 
     if t:
         print(time.time()-start)
-
-    if debug:
-        outdata = pd.read_csv(filepath)
-        print(outdata)
 
 def main():
     '''
