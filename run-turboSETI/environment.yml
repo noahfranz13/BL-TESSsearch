@@ -14,5 +14,4 @@ dependencies:
    - pip:
      - git+https://github.com/UCBerkeleySETI/blimpy
      - git+https://github.com/UCBerkeleySETI/turbo_seti
-     - gspread
-     # Note: run pip install --upgrade oauth2client after creating env
+     - pymysql
