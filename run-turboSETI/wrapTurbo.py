@@ -5,7 +5,7 @@ import pandas as pd
 import pymysql
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 
-def wrap_turboSETI(iis, outDir, t=True):
+def wrap_turboSETI(iis, outDir, t=True, test=False):
     '''
     iis : numpy array of indexes to run through
     infilepath : csv file path of filepaths and if it has run through turboSETI
@@ -27,10 +27,16 @@ def wrap_turboSETI(iis, outDir, t=True):
     # Read in mysql database
     db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                         password=os.environ['GCP_PASS'], database='FileTracking')
-    query = '''
-            SELECT *
-            FROM infiles
-            '''
+    if test:
+        query = '''
+                SELECT turboSETI, splice
+                FROM infiles_test
+                '''
+    else:
+        query = '''
+                SELECT turboSETI, splice
+                FROM infiles
+                '''
     fileinfo = pd.read_sql(query, db)
 
     # Also initiate cursor for updating the table later
@@ -55,13 +61,14 @@ def wrap_turboSETI(iis, outDir, t=True):
         # Uncomment to run turboSETI
 
         # Make out directory if it doesn't exist
-        # if not os.path.exists(outdir):
-        #     os.makedirs(outdir)
-        #
-        # # Run turboSETI
-        # fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
-        # fd.search(n_partitions=32)
-        #
+        if not test:
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+
+            # Run turboSETI
+            fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
+            fd.search(n_partitions=32)
+
         # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
@@ -80,7 +87,8 @@ def wrap_turboSETI(iis, outDir, t=True):
 
         db.commit()
 
-    time.sleep(5)
+    if test:
+        time.sleep(5)
 
 def main():
     '''
@@ -97,9 +105,10 @@ def main():
     parser.add_argument('--ii', help='Array of indexes to run through turboSETI')
     parser.add_argument('--outdir', help='output directory', type=str, default=dir)
     parser.add_argument('--timer', help='Should the runtime be recorded', type=bool, default=True)
+    parser.add_argument('--test', help='If true, script enters testing mode', type=bool, default=False)
     args = parser.parse_args()
 
-    wrap_turboSETI(args.ii, args.outdir, t=args.timer)
+    wrap_turboSETI(args.ii, args.outdir, t=args.timer, test=args.test)
 
 if __name__ == '__main__':
     sys.exit(main())

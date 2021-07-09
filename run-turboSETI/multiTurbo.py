@@ -15,10 +15,16 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                             password=os.environ['GCP_PASS'], database='FileTracking')
 
-    query = '''
-            SELECT turboSETI, splice
-            FROM infiles
-            '''
+    if debug:
+        query = '''
+                SELECT turboSETI, splice
+                FROM infiles_test
+                '''
+    else:
+        query = '''
+                SELECT turboSETI, splice
+                FROM infiles
+                '''
 
     fileinfo = pd.read_sql(query, mysql)
 
@@ -70,7 +76,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
 
         condaenv = '~/miniconda3/bin/activate'
 
-        cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+        cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
 
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
@@ -109,7 +115,7 @@ def main():
     Instead of passing in username, password, and IP of the database, make
     environment variables of
     GCP_IP   : IP address
-    GCP_USR  : Username 
+    GCP_USR  : Username
     GCP_PASS : password
 
     RETURNS
