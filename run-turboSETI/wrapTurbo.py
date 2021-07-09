@@ -2,9 +2,10 @@
 import os, sys, time
 import numpy as np
 import pandas as pd
+import pymysql
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 
-def wrap_turboSETI(iis, infilepath, outDir, t=True):
+def wrap_turboSETI(iis, outDir, t=True):
     '''
     iis : numpy array of indexes to run through
     infilepath : csv file path of filepaths and if it has run through turboSETI
@@ -23,14 +24,23 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
     elif type(iis) != type(np.array([])):
         iis = np.array(iis)
 
-    # Read in spreadsheet for files not run through TurboSETI
-    fileinfo = pd.read_csv(infilepath)
+    # Read in mysql database
+    db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
+                        password=os.environ['GCP_PASS'], database='FileTracking')
+    query = '''
+            SELECT *
+            FROM infiles
+            '''
+    fileinfo = pd.read_sql(query, db)
+
+    # Also initiate cursor for updating the table later
+    cursor = db.cursor()
 
     # Select necessary columns
-    filepaths   = fileinfo['FILE PATH'].to_numpy()
-    filenames   = fileinfo['FILE NAME'].to_numpy()
-    target      = fileinfo['TARGET NAME'].to_numpy()
-    tois        = fileinfo['TOI'].to_numpy()
+    filepaths   = fileinfo['filepath'].to_numpy()
+    filenames   = fileinfo['filename'].to_numpy()
+    target      = fileinfo['target_name'].to_numpy()
+    tois        = fileinfo['toi'].to_numpy()
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
@@ -44,7 +54,7 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
 
         # Uncomment to run turboSETI
 
-        # # Make out directory if it doesn't exist
+        # Make out directory if it doesn't exist
         # if not os.path.exists(outdir):
         #     os.makedirs(outdir)
         #
@@ -52,25 +62,25 @@ def wrap_turboSETI(iis, infilepath, outDir, t=True):
         # fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
         # fd.search(n_partitions=32)
         #
-        # # End timer and write to spreadsheet if time is true
+        # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
             print('{} Runtime : {}'.format(target[ii], runtime))
-            fileinfo.iloc[ii, 9] = runtime
+            sqlcmd0 = f"UPDATE infiles SET runtime={runtime} WHERE row_num={ii}"
+            cursor.execute(sqlcmd0)
 
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
-        fileinfo.iloc[ii, 10] = os.path.join(outdir, name)
+        sqlcmd1 = f"UPDATE infiles SET outpath={os.path.join(outdir, name)} WHERE row_num={ii}"
+        cursor.execute(sqlcmd1)
 
         # Update spreadsheet to reflect turboSETI run
-        fileinfo.iloc[ii, 8] = True
+        sqlcmd2 = f"UPDATE infiles SET turboSETI='TRUE' WHERE row_num={ii}"
+        cursor.execute(sqlcmd2)
+
+        db.commit()
 
     time.sleep(5)
-
-    fileinfo.to_csv(infilepath, index=False)
-
-    
-
 
 def main():
     '''
@@ -84,13 +94,12 @@ def main():
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--infile', help='csv of filepaths and if turboSETI', type=str, default=infile)
     parser.add_argument('--ii', help='Array of indexes to run through turboSETI')
     parser.add_argument('--outdir', help='output directory', type=str, default=dir)
     parser.add_argument('--timer', help='Should the runtime be recorded', type=bool, default=True)
     args = parser.parse_args()
 
-    wrap_turboSETI(args.ii, args.infile, args.outdir, t=args.timer)
+    wrap_turboSETI(args.ii, args.outdir, t=args.timer)
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -3,24 +3,31 @@ import os, sys, time
 import subprocess as sp
 import numpy as np
 import pandas as pd
+import pymysql
 
-def splitRun(nnodes, debug, infile, t, outDir, splicedonly):
+def splitRun(nnodes, debug, t, outDir, splicedonly):
 
     if t:
         start = time.time()
 
     cwd = os.getcwd()
-    print(f'Your cwd has been idetified as {cwd}')
 
-    filepath = os.path.join(cwd, infile)
-    fileinfo = pd.read_csv(filepath)
+    mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
+                            password=os.environ['GCP_PASS'], database='FileTracking')
+
+    query = '''
+            SELECT turboSETI, splice
+            FROM infiles
+            '''
+
+    fileinfo = pd.read_sql(query, mysql)
 
     if debug:
-        print(f'infile: {fileinfo}')
+        print(f'table used : \n{fileinfo}')
 
     # Only select files that haven't been run through turboSETI
-    turbo   = fileinfo['TurboSETI?'].to_numpy()
-    spliced = fileinfo['SPLICED?'].to_numpy()
+    turbo   = fileinfo['turboSETI'].to_numpy()
+    spliced = fileinfo['splice'].to_numpy()
 
     if splicedonly:
         iis = np.where((turbo == False) * (spliced == 'spliced'))[0]
@@ -52,20 +59,20 @@ def splitRun(nnodes, debug, infile, t, outDir, splicedonly):
 
             if int(node[-1]) <= 7:
                 cn.append(node)
+
+    # Choose compute nodes starting with highest number
+    cn = np.flip(cn)
     cn = cn[:nnodes]
 
     # Run on separate compute nodes
     ps = []
-    for ii, kk in enumerate(ii2D):
+    for ii, node in zip(ii2D, cn):
 
-        condaenv = '~/miniconda3/bin/activate' # '/home/noahf/miniconda3/etc/profile.d/conda.sh'
+        condaenv = '~/miniconda3/bin/activate'
 
-        cmd = ['ssh', cn[ii], f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{kk}' --infile {filepath} --timer {t} --outdir {outDir}"]
+        cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
 
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-
-        if debug:
-            print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
         ps.append(ssh)
 
@@ -78,26 +85,32 @@ def splitRun(nnodes, debug, infile, t, outDir, splicedonly):
     if debug:
         outdata = pd.read_csv(filepath)
         print(outdata)
-    
+
 def main():
     '''
     Run turboSETI in parallel across multiple compute nodes on GBT
-    Must pass in a csv file that can be read in with pandas and has headers with
+    Must setup environment variables with access to a mysql database called
+    FileTracking with the following columns
 
-    TurboSETI? : if the file has been run through turboSETI
-    FILE PATH : path to turboSETI input file, inlcuding name
-    FILE NAME : Just the name of the file being passed into turboSETI
-    TARGET NAME : Name of target in the file passed into turboSETI
-    TOI : on target of the cadence to specify the output directory
-    SPLICED? : If the file is spliced of unspliced
+    turboSETI : if the file has been run through turboSETI
+    filepath : path to turboSETI input file, inlcuding name
+    filename : Just the name of the file being passed into turboSETI
+    target_name : Name of target in the file passed into turboSETI
+    toi : on target of the cadence to specify the output directory
+    splice : If the file is spliced of unspliced
 
     INPUT OPTIONS
-    nnodes : number of compute nodes to run on, default is 64
-    infile : infile with the headers above
+    nnodes : number of compute nodes to run on, default is
     debug  : prints specific lines to help debug subprocess
     timer  : times the run if set to true, default is true
     outdir : output directory of turboSETI files, will consist of subdirectories
              labelled by TOI (ON target)
+
+    Instead of passing in username, password, and IP of the database, make
+    environment variables of
+    GCP_IP   : IP address
+    GCP_USR  : Username 
+    GCP_PASS : password
 
     RETURNS
     TurboSETI output files in subdirectories labelled by the ON target for each
