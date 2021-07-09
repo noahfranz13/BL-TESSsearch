@@ -88,6 +88,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         db.commit()
 
     if test:
+        # run a timer to double check the parallel processing is working
         time.sleep(5)
 
 def main():

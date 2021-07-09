@@ -106,11 +106,12 @@ def main():
     splice : If the file is spliced of unspliced
 
     INPUT OPTIONS
-    nnodes : number of compute nodes to run on, default is
-    debug  : prints specific lines to help debug subprocess
-    timer  : times the run if set to true, default is true
-    outdir : output directory of turboSETI files, will consist of subdirectories
-             labelled by TOI (ON target)
+    nnodes      : number of compute nodes to run on, default is
+    debug       : prints specific lines to help debug subprocess
+    timer       : times the run if set to true, default is true
+    outdir      : output directory of turboSETI files, will consist of subdirectories
+                  labelled by TOI (ON target)
+    splicedonly : If True only spliced files are run through
 
     Instead of passing in username, password, and IP of the database, make
     environment variables of
@@ -127,14 +128,13 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--nnodes', help='Number of Compute nodes to run on', type=int, default=64)
-    parser.add_argument('--infile', help='file with info about turboSETI runs', type=str, default='franz-turboSETI-input-file-info.csv')
     parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax/scratch/noahf/turboSETI-outFiles')
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.infile, args.timer, args.outdir, args.splicedonly)
+    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly)
 
 if __name__ == '__main__':
     sys.exit(main())
