@@ -40,14 +40,14 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     fileinfo = pd.read_sql(query, db)
 
-    # Also initiate cursor for updating the table later
-    cursor = db.cursor()
-
     # Select necessary columns
     filepaths   = fileinfo['filepath'].to_numpy()
     filenames   = fileinfo['filename'].to_numpy()
     target      = fileinfo['target_name'].to_numpy()
     tois        = fileinfo['toi'].to_numpy()
+
+    # Also initiate cursor for updating the table later
+    cursor = db.cursor()
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
