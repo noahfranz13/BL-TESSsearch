@@ -85,6 +85,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         sqlcmd2 = f"UPDATE infiles SET turboSETI='TRUE' WHERE row_num={ii}"
         cursor.execute(sqlcmd2)
 
+        # commit database changes
         db.commit()
 
     if test:
