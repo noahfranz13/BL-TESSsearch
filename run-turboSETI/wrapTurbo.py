@@ -55,7 +55,6 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
 
-        print(tois[ii])
         # start timer
         if t:
             start = time.time()
