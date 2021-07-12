@@ -9,7 +9,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
     if t:
         start = time.time()
-    
+
     cwd = os.getcwd()
 
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
@@ -88,7 +88,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
         ps.append(ssh)
         if slowdebug:
             print(ssh.stdout.readlines(), ssh.stderr.readlines())
-        
+
     for p in ps:
         p.communicate()
 
@@ -133,7 +133,7 @@ def main():
     parser.add_argument('--nnodes', help='Number of Compute nodes to run on', type=int, default=64)
     parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
-    parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/home/noahf/turboSETI-outfiles')
+    parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
     parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()

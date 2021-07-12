@@ -14,7 +14,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     returns : outputs .dat files from turboSETI
     '''
-    
+
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -54,7 +54,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
-        
+
         print(tois[ii])
         # start timer
         if t:
@@ -80,7 +80,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
             print('{} Runtime : {}'.format(target[ii], runtime))
             sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
-        
+
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
         sqlcmd1 = f"UPDATE {sqlTable} SET outpath='{os.path.join(outdir,name)}' WHERE row_num={ii}"
@@ -104,7 +104,7 @@ def main():
     cadence ON target inside specified directory
     '''
 
-    dir = '/home/noahf/turboSETI-outfiles'
+    dir = '/datax2/scratch/noahf'
 
     import argparse
     parser = argparse.ArgumentParser()
