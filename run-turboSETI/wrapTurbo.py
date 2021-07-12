@@ -40,6 +40,9 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     fileinfo = pd.read_sql(query, db)
 
+    if test:
+        print(f'turboSETI infile : \n {fileinfo}')
+
     # Select necessary columns
     filepaths   = fileinfo['filepath'].to_numpy()
     filenames   = fileinfo['filename'].to_numpy()
@@ -59,10 +62,9 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         # Set up output subdirectory
         outdir = os.path.join(outDir, 'TOI-{}'.format(tois[ii]))
 
-        # Uncomment to run turboSETI
-
-        # Make out directory if it doesn't exist
         if not test:
+
+            # Make out directory if it doesn't exist
             if not os.path.exists(outdir):
                 os.makedirs(outdir)
 
