@@ -5,11 +5,11 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly):
+def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
     if t:
         start = time.time()
-
+    
     cwd = os.getcwd()
 
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
@@ -40,7 +40,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
     else:
         iis = np.where(turbo == 'FALSE')[0]
 
-    if debug:
+    if debug or slowdebug:
         print(f'indexes used: {iis}')
 
     # Split array of indexes into 2D array to run on separate cores
@@ -71,16 +71,23 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
     cn = cn[:nnodes]
 
     print(f'Running on compute nodes {min(cn)} to {max(cn)}')
-
+    print(f'Writing files to {outDir}')
     # Run on separate compute nodes
     ps = []
     for ii, node in zip(ii2D, cn):
 
         condaenv = '~/miniconda3/bin/activate'
 
-        cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+        if debug:
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+
+        else:
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         ps.append(ssh)
+        if slowdebug:
+            print(ssh.stdout.readlines(), ssh.stderr.readlines())
         
     for p in ps:
         p.communicate()
@@ -126,11 +133,12 @@ def main():
     parser.add_argument('--nnodes', help='Number of Compute nodes to run on', type=int, default=64)
     parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
-    parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax/scratch/noahf/turboSETI-outFiles')
+    parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/home/noahf/turboSETI-outfiles')
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
+    parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly)
+    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, slowdebug=args.slowdebug)
 
 if __name__ == '__main__':
     sys.exit(main())

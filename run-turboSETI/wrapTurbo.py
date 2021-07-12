@@ -14,7 +14,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     returns : outputs .dat files from turboSETI
     '''
-
+    
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -54,19 +54,21 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
-
+        
+        print(tois[ii])
         # start timer
         if t:
             start = time.time()
 
         # Set up output subdirectory
-        outdir = os.path.join(outDir, 'TOI-{}'.format(tois[ii]))
+        outdir = os.path.join(outDir, f"TOI-{tois[ii]}")
 
         if not test:
 
             # Make out directory if it doesn't exist
+            print(outdir)
             if not os.path.exists(outdir):
-                os.makedirs(outdir)
+                os.mkdir(outdir)
 
             # Run turboSETI
             fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
@@ -102,8 +104,7 @@ def main():
     cadence ON target inside specified directory
     '''
 
-    dir = '/datax/scratch/noahf/turboSETI-outFiles'
-    infile = '~/BL-TESSsearch/run-turboSETI/franz-turboSETI-input-file-info.csv'
+    dir = '/home/noahf/turboSETI-outfiles'
 
     import argparse
     parser = argparse.ArgumentParser()
