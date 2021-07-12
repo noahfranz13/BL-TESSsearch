@@ -81,7 +81,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
-        sqlcmd1 = f"UPDATE {sqlTable} SET outpath={os.path.join(outdir, name)} WHERE row_num={ii}"
+        sqlcmd1 = f"UPDATE {sqlTable} SET outpath='{os.path.join(outdir,name)}' WHERE row_num={ii}"
         cursor.execute(sqlcmd1)
 
         # Update spreadsheet to reflect turboSETI run
