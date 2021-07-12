@@ -34,7 +34,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
         sqlTable = 'infiles'
 
     query = f'''
-            SELECT turboSETI, splice
+            SELECT *
             FROM {sqlTable}
             '''
 
@@ -78,7 +78,7 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
             print('{} Runtime : {}'.format(target[ii], runtime))
             sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
-
+        
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
         sqlcmd1 = f"UPDATE {sqlTable} SET outpath={os.path.join(outdir, name)} WHERE row_num={ii}"

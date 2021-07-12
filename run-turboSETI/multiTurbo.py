@@ -78,9 +78,11 @@ def splitRun(nnodes, debug, t, outDir, splicedonly):
 
         condaenv = '~/miniconda3/bin/activate'
 
-        cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+        cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         ps.append(ssh)
+        if debug:
+            print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
     for p in ps:
         p.communicate()
