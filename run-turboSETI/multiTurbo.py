@@ -5,12 +5,14 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, varPath, slowdebug=False):
+def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
     if t:
         start = time.time()
 
     cwd = os.getcwd()
+    usrname = cwd.split('/')[2]
+    varPath = f'/home/{usrname}/.bash_profile'
 
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                             password=os.environ['GCP_PASS'], database='FileTracking')
@@ -138,11 +140,10 @@ def main():
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
-    parser.add_argument('--varPath', help='Path to personal .bash_profile', type=str, default='/home/noahf/.bash_profile')
     parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, args.varPath, slowdebug=args.slowdebug)
+    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, slowdebug=args.slowdebug)
 
 if __name__ == '__main__':
     sys.exit(main())
