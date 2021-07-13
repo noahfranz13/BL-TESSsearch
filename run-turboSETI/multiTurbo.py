@@ -79,7 +79,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
         condaenv = '~/miniconda3/bin/activate'
 
-        print(f'Running ')
+        print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
 
         if debug:
             cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
