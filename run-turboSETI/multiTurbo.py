@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
+def splitRun(nnodes, debug, t, outDir, splicedonly, varPath, slowdebug=False):
 
     if t:
         start = time.time()
@@ -82,10 +82,10 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
         print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
 
         if debug:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
 
         else:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
 
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         ps.append(ssh)
@@ -138,10 +138,11 @@ def main():
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
+    parser.add_argument('--varPath', help='Path to personal .bash_profile', type=str, default='/home/noahf/.bash_profile')
     parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, slowdebug=args.slowdebug)
+    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, args.varPath, slowdebug=args.slowdebug)
 
 if __name__ == '__main__':
     sys.exit(main())
