@@ -17,7 +17,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
     if debug:
         query = '''
-                SELECT row_num, turboSETI, splice
+                SELECT row_num, turboSETI, splice, target_name
                 FROM infiles_test
                 '''
     else:
@@ -42,6 +42,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
 
     if debug or slowdebug:
         print(f'indexes used: {iis}')
+    print(f'Running turboSETI on {len(iis)} files')
 
     # Split array of indexes into 2D array to run on separate cores
     if len(iis)%nnodes == 0:
@@ -77,6 +78,8 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
     for ii, node in zip(ii2D, cn):
 
         condaenv = '~/miniconda3/bin/activate'
+
+        print(f'Running ')
 
         if debug:
             cmd = ['ssh', node, f"source {condaenv} runTurbo ; source /home/noahf/.bash_profile ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
