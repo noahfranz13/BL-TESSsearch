@@ -5,7 +5,7 @@ import pandas as pd
 import pymysql
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 
-def wrap_turboSETI(iis, outDir, t=True, test=False):
+def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     '''
     iis : numpy array of indexes to run through
     infilepath : csv file path of filepaths and if it has run through turboSETI
@@ -27,11 +27,6 @@ def wrap_turboSETI(iis, outDir, t=True, test=False):
     # Read in mysql database
     db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                         password=os.environ['GCP_PASS'], database='FileTracking')
-
-    if test:
-        sqlTable = 'infiles_test'
-    else:
-        sqlTable = 'infiles'
 
     query = f'''
             SELECT *

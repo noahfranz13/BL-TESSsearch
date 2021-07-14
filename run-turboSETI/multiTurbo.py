@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
+def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
 
     if t:
         start = time.time()
@@ -17,16 +17,10 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, slowdebug=False):
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                             password=os.environ['GCP_PASS'], database='FileTracking')
 
-    if debug:
-        query = '''
-                SELECT row_num, turboSETI, splice, target_name
-                FROM infiles_test
-                '''
-    else:
-        query = '''
-                SELECT turboSETI, splice
-                FROM infiles
-                '''
+    query = f'''
+            SELECT row_num, turboSETI, splice, target_name
+            FROM {sqlTable}
+            '''
 
     fileinfo = pd.read_sql(query, mysql)
 
@@ -139,6 +133,7 @@ def main():
     parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
     parser.add_argument('--timer', help='times run if true', type=bool, default=True)
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
+    parser.add_argument('--sqlTable', help='Table name in the sql database', type=str)
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
     parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()
