@@ -26,7 +26,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
     # Read in mysql database
     db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
-                        password=os.environ['GCP_PASS'], database='FileTracking')
+                         password=os.environ['GCP_PASS'], database='FileTracking')
 
     query = f'''
             SELECT *
@@ -79,6 +79,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             runtime = time.time() - start
             sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
+            db.commit()
             if not test:
                 with open(outlog, 'a') as f:
                     f.write('{} Runtime : {}\n'.format(target[ii], runtime))
@@ -87,18 +88,17 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         name = filenames[ii].split('.')[0] + '.dat'
         sqlcmd1 = f"UPDATE {sqlTable} SET outpath='{os.path.join(outdir,name)}' WHERE row_num={ii}"
         cursor.execute(sqlcmd1)
+        db.commit()
 
         # Update spreadsheet to reflect turboSETI run
         sqlcmd2 = f"UPDATE {sqlTable} SET turboSETI='TRUE' WHERE row_num={ii}"
         cursor.execute(sqlcmd2)
+        db.commit()
         if not test:
             with open(outlog, 'a') as f:
                 f.write(f'Finished running turboSETI on {infile}')
                 f.write('\n')
-
-        # Commit changes to database
-        db.commit()
-
+                
         if test:
             time.sleep(0.1)
 
