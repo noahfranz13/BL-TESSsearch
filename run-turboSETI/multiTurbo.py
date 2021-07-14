@@ -80,16 +80,16 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     for ii, node in zip(ii2D, cn):
 
         if len(ii) != 0:
-
+            
             condaenv = '~/miniconda3/bin/activate'
 
             print(f"Running turboSETI on {len(ii)} files for cadence {fileinfo['target_name'][ii].to_numpy()[0]} on compute node: {node}")
 
             if debug:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
 
             else:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
 
             ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             ps.append(ssh)
