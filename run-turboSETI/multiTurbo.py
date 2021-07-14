@@ -60,7 +60,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
             else:
                 node = f'blc{i}{k}'
 
-            if int(node[-1]) <= 7:
+            if int(node[-1])<=7 and node!='blc47': # skip blc47 because it has an error
                 cn.append(node)
 
     # Choose compute nodes starting with highest number
@@ -73,22 +73,20 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
     ps = []
     for ii, node in zip(ii2D, cn):
 
-        if node != 'blc47': # skip blc47 because it has an error
+        condaenv = '~/miniconda3/bin/activate'
 
-            condaenv = '~/miniconda3/bin/activate'
+        print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
 
-            print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
+        if debug:
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
 
-            if debug:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+        else:
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
 
-            else:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
-
-            ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            ps.append(ssh)
-            if slowdebug:
-                print(ssh.stdout.readlines(), ssh.stderr.readlines())
+        ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        ps.append(ssh)
+        if slowdebug:
+            print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
     for p in ps:
         p.communicate()
