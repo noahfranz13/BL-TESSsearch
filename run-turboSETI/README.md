@@ -5,8 +5,8 @@ This README gives instructions to setup to run the multiTurbo.py script on multi
 The environment.yml file in this repo is for a conda environment called runTurbo
 that has all of the necessary dependencies installed. Run the following commands:
 
-1) `source /home/noahf/miniconda3/bin/activate runTurbo`
-2) `conda activate runTurbo`
+1) ```source /home/noahf/miniconda3/bin/activate runTurbo```
+2) ```conda activate runTurbo```
 
 ## Setting up an SQL table
 For ease and to keep it cheap it is probably best to create a table and then
@@ -56,7 +56,7 @@ in your password to enter the mysql terminal.
 with the name you want for your table. The second command assumes your table only
 has the columns described above, however, if it has more add more columns accordingly.
 
-`USE FileTracking`
+```USE FileTracking```
 ```
 CREATE TABLE tablename (
 row_num INT,
@@ -118,4 +118,4 @@ INPUT OPTIONS
   ```
 
 An example to run the multiTurbo script from the command line is
-`python3 multiTurbo.py --outdir my/path/to/output --sqlTable myTableName`
+```python3 multiTurbo.py --outdir my/path/to/output --sqlTable myTableName```
