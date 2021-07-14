@@ -44,9 +44,6 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     target      = fileinfo['target_name'].to_numpy()
     tois        = fileinfo['toi'].to_numpy()
 
-    # Also initiate cursor for updating the table later
-    cursor = db.cursor()
-
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
 
@@ -79,26 +76,31 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             runtime = time.time() - start
             sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
-            db.commit()
+            db_updated.commit()
             if not test:
                 with open(outlog, 'a') as f:
                     f.write('{} Runtime : {}\n'.format(target[ii], runtime))
+
+        db_updated = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
+                             password=os.environ['GCP_PASS'], database='FileTracking')
+        # Also initiate cursor for updating the table later
+        cursor = db_updated.cursor()
 
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
         sqlcmd1 = f"UPDATE {sqlTable} SET outpath='{os.path.join(outdir,name)}' WHERE row_num={ii}"
         cursor.execute(sqlcmd1)
-        db.commit()
+        db_updated.commit()
 
         # Update spreadsheet to reflect turboSETI run
         sqlcmd2 = f"UPDATE {sqlTable} SET turboSETI='TRUE' WHERE row_num={ii}"
         cursor.execute(sqlcmd2)
-        db.commit()
+        db_updated.commit()
         if not test:
             with open(outlog, 'a') as f:
                 f.write(f'Finished running turboSETI on {infile}')
                 f.write('\n')
-                
+
         if test:
             time.sleep(0.1)
 
