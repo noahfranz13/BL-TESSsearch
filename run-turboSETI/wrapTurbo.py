@@ -71,6 +71,11 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
             fd.search(n_partitions=32)
 
+        db_updated = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
+                             password=os.environ['GCP_PASS'], database='FileTracking')
+        # Also initiate cursor for updating the table later
+        cursor = db_updated.cursor()
+
         # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
@@ -80,11 +85,6 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             if not test:
                 with open(outlog, 'a') as f:
                     f.write('{} Runtime : {}\n'.format(target[ii], runtime))
-
-        db_updated = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
-                             password=os.environ['GCP_PASS'], database='FileTracking')
-        # Also initiate cursor for updating the table later
-        cursor = db_updated.cursor()
 
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
