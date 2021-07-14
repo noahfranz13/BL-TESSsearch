@@ -3,10 +3,11 @@ This README gives instructions to setup to run the multiTurbo.py script on multi
 
 ## Setting up a Conda Environment
 The environment.yml file in this repo is for a conda environment called runTurbo
-that has all of the necessary dependencies installed. Run the following commands:
+that has all of the necessary dependencies installed. Run the following commands to
+activate it in the directory you plan to run multiTurbo:
 
-1) `source /home/noahf/miniconda3/bin/activate runTurbo`
-2) `conda activate runTurbo`
+1) ```source /home/noahf/miniconda3/bin/activate runTurbo```
+2) ```conda activate runTurbo```
 
 ## Setting up an SQL table
 For ease and to keep it cheap it is probably best to create a table and then
@@ -55,18 +56,22 @@ in your password to enter the mysql terminal.
 3) Run the following sequence of commands to create a SQL table, replace tablename
 with the name you want for your table. The second command assumes your table only
 has the columns described above, however, if it has more add more columns accordingly.
-`USE FileTracking`
-`CREATE TABLE tablename (
- row_num INT,
- target_name VARCHAR(300),
- toi VARCHAR(100),
- filename VARCHAR(300),
- filepath VARCHAR(500),
- splice VARCHAR(100),
- turboSETI VARCHAR(100),
- runtime FLOAT NULL DEFAULT 0,
- outpath VARCHAR(500) NULL DEFAULT 'NONE'
- );`
+
+```USE FileTracking```
+```
+CREATE TABLE tablename (
+row_num INT,
+target_name VARCHAR(300),
+toi VARCHAR(100),
+filename VARCHAR(300),
+filepath VARCHAR(500),
+splice VARCHAR(100),
+turboSETI VARCHAR(100),
+runtime FLOAT NULL DEFAULT 0,
+outpath VARCHAR(500) NULL DEFAULT 'NONE'
+);
+ ```
+ 
 4) To check that it worked run `DESCRIBE tablename` and make sure all your columns
 are there
 
@@ -89,9 +94,11 @@ The last step to setup the SQL database is you must add 3 global variables to
 your `.bash_profile` in the home directory on the machine you will be running
 multiTurbo on. All you have to do is navigate to your home directory, open the
 .bash_profile file, and add the following lines to it:
-`export GCP_USR="USERNAME"
+```
+export GCP_USR="USERNAME"
 export GCP_IP="IP ADDRESS"
-export GCP_PASS="PASSWORD`
+export GCP_PASS="PASSWORD"
+```
 Where you replace the USERNAME, IP ADDRESS, and PASSWORD with your SQL databases
 respective information. If you are using the `noahf-tess-filetracking`, reach out
 to me to get this information!
@@ -100,14 +107,16 @@ to me to get this information!
 Once you have followed the steps above you should have a conda evironment and SQL
 table setup. Then from there you should be ready to run the multiTurbo python script!
 When running the multiTurbo script has the following options:
-`INPUT OPTIONS
+```
+INPUT OPTIONS
   outdir      : output directory of turboSETI files, will consist of subdirectories
               labelled by TOI (ON target). This is Required.
   sqlTable    : The name of your SQL Table. This is Required
   nnodes      : number of compute nodes to run on, default is 64
   timer       : times the run if set to true, default is True
   debug       : prints specific lines to help debug subprocess default is False
-  splicedonly : If True only spliced files are run through default is False`
+  splicedonly : If True only spliced files are run through default is False
+  ```
 
 An example to run the multiTurbo script from the command line is
-`python3 multiTurbo.py --outdir my/path/to/output --sqlTable myTableName`
+```python3 multiTurbo.py --outdir my/path/to/output --sqlTable myTableName```
