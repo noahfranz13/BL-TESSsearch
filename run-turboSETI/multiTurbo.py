@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
+def splitRun(nnodes, debug, t, outDir, splicedonly, unplicedonly, sqlTable, slowdebug=False):
 
     if t:
         start = time.time()
@@ -33,6 +33,8 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
 
     if splicedonly:
         iis = np.where((turbo == 'FALSE') * (spliced == 'spliced'))[0]
+    elif unsplicedonly:
+        iis = np.where((turbo == 'FALSE') * (spliced == 'unspliced'))[0]
     else:
         iis = np.where(turbo == 'FALSE')[0]
 
@@ -135,10 +137,11 @@ def main():
     parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
     parser.add_argument('--sqlTable', help='Table name in the sql database', type=str)
     parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
+    parser.add_argument('--unsplicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
     parser.add_argument('--slowdebug', type=bool, default=False)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, slowdebug=args.slowdebug)
+    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, args.unsplicedonly, args.sqlTable, slowdebug=args.slowdebug)
 
 if __name__ == '__main__':
     sys.exit(main())
