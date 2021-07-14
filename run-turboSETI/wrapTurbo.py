@@ -57,6 +57,11 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         # Set up output subdirectory
         outdir = os.path.join(outDir, f"TOI-{tois[ii]}")
 
+        # Write to log file
+        outlog = os.path.join(outdir, f'{tois[ii]}-cadence.log')
+        with open(outlog, 'a') as f:
+            f.write(f'Starting turboSETI for {infile}\n')
+
         if not test:
 
             # Make out directory if it doesn't exist
@@ -71,9 +76,11 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
-            print('{} Runtime : {}'.format(target[ii], runtime))
             sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
             cursor.execute(sqlcmd0)
+
+            with open(outlog, 'a') as f:
+                f.write('{} Runtime : {}\n'.format(target[ii], runtime))
 
         # Write outfile path to dataframe
         name = filenames[ii].split('.')[0] + '.dat'
@@ -86,6 +93,10 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
         # commit database changes
         db.commit()
+
+        with open(outlog, 'a') as f:
+            f.write(f'Finished running turboSETI on {infile}')
+            f.write('\n')
 
     if test:
         # run a timer to double check the parallel processing is working

@@ -5,20 +5,19 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, unplicedonly, sqlTable, slowdebug=False):
+def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slowdebug=False):
 
     if t:
         start = time.time()
 
     cwd = os.getcwd()
-    usrname = cwd.split('/')[2]
-    varPath = f'/home/{usrname}/.bash_profile'
+    varPath = '~/.bash_profile'
 
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                             password=os.environ['GCP_PASS'], database='FileTracking')
 
     query = f'''
-            SELECT row_num, turboSETI, splice, target_name
+            SELECT *
             FROM {sqlTable}
             '''
 
@@ -27,32 +26,37 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unplicedonly, sqlTable, slow
     if debug:
         print(f'table used : \n{fileinfo}')
 
+
     # Only select files that haven't been run through turboSETI
     turbo   = fileinfo['turboSETI'].to_numpy()
     spliced = fileinfo['splice'].to_numpy()
+    tois = fileinfo['toi'].to_numpy()
 
-    if splicedonly:
-        iis = np.where((turbo == 'FALSE') * (spliced == 'spliced'))[0]
-    elif unsplicedonly:
-        iis = np.where((turbo == 'FALSE') * (spliced == 'unspliced'))[0]
-    else:
-        iis = np.where(turbo == 'FALSE')[0]
+    # Create 2D array of
+    uniqueIDs = np.unique(tois)
+    ii2D = []
+    for id in uniqueIDs:
+
+        if splicedonly:
+            arg = (turbo == 'FALSE') * (spliced == 'spliced') * (tois == id)
+        elif unsplicedonly:
+            arg = (turbo == 'FALSE') * (spliced == 'unspliced') * (tois == id)
+        else:
+            arg = (turbo == 'FALSE') * (tois == id)
+
+        whereID = np.where(arg)[0]
+        ii2D.append(whereID)
 
     if debug or slowdebug:
-        print(f'indexes used: {iis}')
-    print(f'Running turboSETI on {len(iis)} files')
+        print(f'indexes used: {ii2D}')
 
-    # Split array of indexes into 2D array to run on separate cores
-    if len(iis)%nnodes == 0:
-        ii2D = np.reshape(iis, (nnodes, -1))
-    else:
-        nleft = len(iis)%nnodes
-        ii2D = np.reshape(iis[:-nleft], (nnodes, -1)).tolist()
-        for k in range(nleft):
-            ii2D[k].append(iis[-(k+1)])
-        ii2D = np.array(ii2D, dtype=object)
+    # Get number of files running through
+    length = 0
+    for row in ii2D:
+        length+=len(row)
+    print(f"Running turboSETI on {length} files")
 
-    # create list of compute nodes with length nnodes
+    # Create list of available compute nodes
     cn = []
     for i in range(8):
         for k in range(10):
@@ -75,20 +79,22 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unplicedonly, sqlTable, slow
     ps = []
     for ii, node in zip(ii2D, cn):
 
-        condaenv = '~/miniconda3/bin/activate'
+        if len(ii) != 0:
 
-        print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
+            condaenv = '~/miniconda3/bin/activate'
 
-        if debug:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+            print(f"Running turboSETI on {len(ii)} files for cadence {fileinfo['target_name'][ii].to_numpy()[0]} on compute node: {node}")
 
-        else:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+            if debug:
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
 
-        ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        ps.append(ssh)
-        if slowdebug:
-            print(ssh.stdout.readlines(), ssh.stderr.readlines())
+            else:
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
+
+            ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            ps.append(ssh)
+            if slowdebug:
+                print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
     for p in ps:
         p.communicate()
