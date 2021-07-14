@@ -73,20 +73,22 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, sqlTable, slowdebug=False):
     ps = []
     for ii, node in zip(ii2D, cn):
 
-        condaenv = '~/miniconda3/bin/activate'
+        if node != 'blc47': # skip blc47 because it has an error
 
-        print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
+            condaenv = '~/miniconda3/bin/activate'
 
-        if debug:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
+            print(f'Running turboSETI on targets {fileinfo['target_name'][ii]} on compute node: {cn}')
 
-        else:
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+            if debug:
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir} --test {debug}"]
 
-        ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        ps.append(ssh)
-        if slowdebug:
-            print(ssh.stdout.readlines(), ssh.stderr.readlines())
+            else:
+                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii}' --timer {t} --outdir {outDir}"]
+
+            ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            ps.append(ssh)
+            if slowdebug:
+                print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
     for p in ps:
         p.communicate()
