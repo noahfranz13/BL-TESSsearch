@@ -3,7 +3,8 @@ This README gives instructions to setup to run the multiTurbo.py script on multi
 
 ## Setting up a Conda Environment
 The environment.yml file in this repo is for a conda environment called runTurbo
-that has all of the necessary dependencies installed. Run the following commands:
+that has all of the necessary dependencies installed. Run the following commands to
+activate it in the directory you plan to run multiTurbo:
 
 1) ```source /home/noahf/miniconda3/bin/activate runTurbo```
 2) ```conda activate runTurbo```
