@@ -79,7 +79,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         # End timer and write to spreadsheet
 
         name = filenames[ii].split('.')[0] + '.dat'
-        
+
         if t:
             runtime = time.time() - start
             if not test:
