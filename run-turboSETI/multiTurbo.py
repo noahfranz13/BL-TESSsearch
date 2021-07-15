@@ -1,5 +1,5 @@
 # Imports
-import os, sys, time
+import os, sys, time, signal
 import subprocess as sp
 import numpy as np
 import pandas as pd
@@ -84,23 +84,23 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
             print(f"Running turboSETI on {len(ii)} files for cadence {fileinfo['target_name'][ii].to_numpy()[0]} on compute node: {node}")
 
             if debug:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
+                cmd = ['ssh', '-T', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
 
             else:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
+                cmd = ['ssh', '-T',  node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
 
             ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             ps.append(ssh)
             if slowdebug:
                 print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
-    for p in ps:
-        try:
+    try:
+        for p in ps:
             p.communicate()
-        except KeyboardInterrupt:
-            for p in ps:
-                p.kill()
-
+    except KeyboardInterrupt:
+        for p in ps:
+            p.kill()
+                
     if t:
         print(time.time()-start)
 
