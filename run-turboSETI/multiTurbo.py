@@ -95,7 +95,11 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
                 print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
     for p in ps:
-        p.communicate()
+        try:
+            p.communicate()
+        except KeyboardInterrupt:
+            for p in ps:
+                p.kill()
 
     if t:
         print(time.time()-start)
