@@ -76,7 +76,10 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         # Also initiate cursor for updating the table later
         cursor = db.cursor()
 
-        # End timer and write to spreadsheet if time is true
+        # End timer and write to spreadsheet
+
+        name = filenames[ii].split('.')[0] + '.dat'
+        
         if t:
             runtime = time.time() - start
             if not test:
