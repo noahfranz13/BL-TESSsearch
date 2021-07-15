@@ -19,6 +19,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     query = f'''
             SELECT *
             FROM {sqlTable}
+            WHERE turboSETI='FALSE'
             '''
 
     fileinfo = pd.read_sql(query, mysql)
@@ -26,23 +27,20 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     if debug:
         print(f'table used : \n{fileinfo}')
 
-
-    # Only select files that haven't been run through turboSETI
-    turbo   = fileinfo['turboSETI'].to_numpy()
+    # Create 2D array of indexes
     spliced = fileinfo['splice'].to_numpy()
     tois = fileinfo['toi'].to_numpy()
 
-    # Create 2D array of
     uniqueIDs = np.unique(tois)
     ii2D = []
     for id in uniqueIDs:
 
         if splicedonly:
-            arg = (turbo == 'FALSE') * (spliced == 'spliced') * (tois == id)
+            arg = (spliced == 'spliced') * (tois == id)
         elif unsplicedonly:
-            arg = (turbo == 'FALSE') * (spliced == 'unspliced') * (tois == id)
+            arg = (spliced == 'unspliced') * (tois == id)
         else:
-            arg = (turbo == 'FALSE') * (tois == id)
+            arg = (tois == id)
 
         whereID = np.where(arg)[0]
         ii2D.append(whereID)
@@ -80,8 +78,8 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     for ii, node in zip(ii2D, cn):
 
         if len(ii) != 0:
-            
-            condaenv = '~/miniconda3/bin/activate'
+
+            condaenv = '/home/noahf/miniconda3/bin/activate'
 
             print(f"Running turboSETI on {len(ii)} files for cadence {fileinfo['target_name'][ii].to_numpy()[0]} on compute node: {node}")
 

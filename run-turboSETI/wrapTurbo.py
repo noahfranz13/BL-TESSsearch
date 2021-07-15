@@ -8,8 +8,8 @@ from turbo_seti.find_doppler.find_doppler import FindDoppler
 def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     '''
     iis : numpy array of indexes to run through
-    infilepath : csv file path of filepaths and if it has run through turboSETI
     outDir : directory to store output subdirectories
+    sqlTable : input SQL table name
     t : boolean, if true runtime is written to spreadsheet
 
     returns : outputs .dat files from turboSETI
@@ -31,6 +31,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     query = f'''
             SELECT *
             FROM {sqlTable}
+            WHERE turboSETI='FALSE'
             '''
 
     fileinfo = pd.read_sql(query, db)
@@ -43,6 +44,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     filenames   = fileinfo['filename'].to_numpy()
     target      = fileinfo['target_name'].to_numpy()
     tois        = fileinfo['toi'].to_numpy()
+    row_num     = fileinfo['row_num'].to_numpy()
 
     # Run turboSETI
     for ii, infile in zip(iis, filepaths[iis]):
@@ -71,31 +73,36 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
             fd.search(n_partitions=32)
 
-        db_updated = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
-                             password=os.environ['GCP_PASS'], database='FileTracking')
         # Also initiate cursor for updating the table later
-        cursor = db_updated.cursor()
+        cursor = db.cursor()
 
         # End timer and write to spreadsheet if time is true
         if t:
             runtime = time.time() - start
-            sqlcmd0 = f"UPDATE {sqlTable} SET runtime={runtime} WHERE row_num={ii}"
-            cursor.execute(sqlcmd0)
-            db_updated.commit()
             if not test:
                 with open(outlog, 'a') as f:
                     f.write('{} Runtime : {}\n'.format(target[ii], runtime))
 
-        # Write outfile path to dataframe
-        name = filenames[ii].split('.')[0] + '.dat'
-        sqlcmd1 = f"UPDATE {sqlTable} SET outpath='{os.path.join(outdir,name)}' WHERE row_num={ii}"
-        cursor.execute(sqlcmd1)
-        db_updated.commit()
+            sqlcmd = f"""
+                      UPDATE {sqlTable}
+                      SET runtime={runtime},
+                          outpath='{os.path.join(outdir,name)}',
+                          turboSETI='TRUE'
+                      WHERE row_num={row_num[ii]}
+                      """
+            cursor.execute(sqlcmd)
+            db.commit()
 
-        # Update spreadsheet to reflect turboSETI run
-        sqlcmd2 = f"UPDATE {sqlTable} SET turboSETI='TRUE' WHERE row_num={ii}"
-        cursor.execute(sqlcmd2)
-        db_updated.commit()
+        else:
+            sqlcmd = f"""
+                      UPDATE {sqlTable}
+                      SET outpath='{os.path.join(outdir,name)}',
+                          turboSETI='TRUE'
+                      WHERE row_num={row_num[ii]}
+                      """
+            cursor.execute(sqlcmd)
+            db.commit()
+
         if not test:
             with open(outlog, 'a') as f:
                 f.write(f'Finished running turboSETI on {infile}')
