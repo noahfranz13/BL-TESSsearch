@@ -100,7 +100,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     except KeyboardInterrupt:
         print('terminating processes...')
         for p in ps:
-            p.terminate()
+            p.kill()
         print('All Processes Terminated')
 
     if t:
