@@ -98,9 +98,11 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
         for p in ps:
             p.communicate()
     except KeyboardInterrupt:
+        print('terminating processes...')
         for p in ps:
-            p.kill()
-                
+            p.terminate()
+        print('All Processes Terminated')
+
     if t:
         print(time.time()-start)
 
