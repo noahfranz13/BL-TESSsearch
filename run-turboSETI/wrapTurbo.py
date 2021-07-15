@@ -114,9 +114,6 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         if test:
             time.sleep(0.1)
 
-def SignalHandler(signum, frame):
-    raise KeyboardInterrupt
-
 def main():
     '''
     Access spreadsheet with file information data then run turboSETI on those
@@ -135,17 +132,8 @@ def main():
     parser.add_argument('--test', help='If true, script enters testing mode', type=bool, default=False)
     args = parser.parse_args()
 
-    # Kill process if any of these signals are received
-    signal.signal(signal.SIGHUP, SignalHandler)
-    signal.signal(signal.SIGTERM, SignalHandler)
-    #signal.signal(signal.SIGKILL, SignalHandler)
-    signal.signal(signal.SIGINT, SignalHandler)
-
     wrap_turboSETI(args.ii, args.outdir, args.sqlTable, t=args.timer, test=args.test)
 
 if __name__ == '__main__':
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        print('got here')
-        sys.exit(1)
+
+    sys.exit(main())
