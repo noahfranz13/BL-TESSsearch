@@ -2,7 +2,7 @@
 # Uses both find_event_pipeline and plot_event_pipeline turboSETI methods
 # to create waterfall plots of the events found in a full cadence 
 
-def FindPlotEvents(dataDir, threshold=3):
+def FindPlotEvents(dataDir, threshold=3, transitTimes=None):
     '''
     dataDir : string with directory housing both the .dat and .h5 files
 
@@ -11,8 +11,11 @@ def FindPlotEvents(dataDir, threshold=3):
 
     import os, glob
     from turbo_seti.find_event.find_event_pipeline import find_event_pipeline
-    from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
+    #from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
     #%matplotlib inline
+    
+    # Import local functions
+    from noahf_plot_event_pipeline import plot_event_pipeline
 
     # create .lst file for .h5 files
     h5list = sorted(glob.glob(dataDir + '/*.h5'))
@@ -38,4 +41,5 @@ def FindPlotEvents(dataDir, threshold=3):
     # run plot_event_pipeline
     print()
     print('####################### Beginning Plot Event Pipeline #######################')
-    plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=True)
+    plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
+    #plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
