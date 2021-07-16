@@ -101,10 +101,10 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
             p.communicate()
 
     except KeyboardInterrupt:
-        print('terminating processes...')
         for p, cn in zip(ps, usedcn):
             exitcmd = ['ssh', cn, f"kill -9 $(pidof python3 {cwd}/wrapTurbo.py)"]
-            exitssh = sp.Popen(exitcmd, universal_newlines=True)
+            exitssh = sp.Popen(exitcmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
         print('All Processes Terminated')
 
     if t:
