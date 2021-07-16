@@ -180,7 +180,7 @@ def main():
         for p in ps:
             p.communicate()
     except KeyboardInterrupt:
-        for p, cn in zip(ps, usedcn):
+        for p, cn in zip(ps, nodes):
             exitcmd = ['ssh', cn, f"kill -9 $(pidof python3 {cwd}/wrapTurbo.py)"]
             exitssh = sp.Popen(exitcmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
