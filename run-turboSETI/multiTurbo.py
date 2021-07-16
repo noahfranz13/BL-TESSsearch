@@ -32,7 +32,6 @@ def getNodes(nnodes):
     cn = cn[:nnodes]
 
     print(f'Running on compute nodes {min(cn)} to {max(cn)}')
-    print(f'Writing files to {outDir}')
     return cn
 
 def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
@@ -104,7 +103,7 @@ def multiCommand(nodes, commands, slowdebug=False):
 
     # Run on separate compute nodes
     ps = []
-    for cmd, node in zip(commands, cn):
+    for cmd, node in zip(commands, nodes):
 
         ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
         ps.append(ssh)
@@ -149,6 +148,8 @@ def main():
     cwd = os.getcwd()
     varPath = '~/.bash_profile'
 
+    print(f'Writing files to {args.outdir}')
+
     cns = getNodes(args.nnodes)
     ii2D = getIndex(args.sqlTable,
                     splicedonly=args.splicedonly,
@@ -163,8 +164,9 @@ def main():
 
             print(f"Running turboSETI on {len(ii)} files on compute node: {node}")
 
-            if debug:
+            if args.debug:
                 cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {args.timer} --outdir {args.outdir} --test {args.debug} --sqlTable {args.sqlTable}"]
+                print(f'Running: {cmd}')
 
             else:
                 cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {args.timer} --outdir {args.outdir} --sqlTable {args.sqlTable}"]
