@@ -1,5 +1,5 @@
 # Imports
-import os, sys, time, signal
+import os, sys, time
 import subprocess as sp
 import numpy as np
 import pandas as pd
