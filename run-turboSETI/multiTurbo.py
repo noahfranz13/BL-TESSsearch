@@ -75,6 +75,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
     print(f'Writing files to {outDir}')
     # Run on separate compute nodes
     ps = []
+    usedcn = []
     for ii, node in zip(ii2D, cn):
 
         if len(ii) != 0:
@@ -89,9 +90,9 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
             else:
                 cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
 
-            ssh = sp.Popen(cmd[:1], universal_newlines=True, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-            ssh.stdin.write(cmd[2])
+            ssh = sp.Popen(cmd, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
             ps.append(ssh)
+            usedcn.append(node)
             if slowdebug:
                 print(ssh.stdout.readlines(), ssh.stderr.readlines())
 
@@ -101,8 +102,9 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
 
     except KeyboardInterrupt:
         print('terminating processes...')
-        for p in ps:
-            p.terminate()
+        for p, cn in zip(ps, usedcn):
+            exitcmd = ['ssh', cn, f"kill -9 $(pidof python3 {cwd}/wrapTurbo.py)"]
+            exitssh = sp.Popen(exitcmd, universal_newlines=True)
         print('All Processes Terminated')
 
     if t:
