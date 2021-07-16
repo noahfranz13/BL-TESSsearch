@@ -4,14 +4,68 @@ import subprocess as sp
 import numpy as np
 import pandas as pd
 import pymysql
+import fabric
 
-def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slowdebug=False):
+def sshCommand(commands, hosts):
+    '''
+    Function connect to n compute nodes and run n commands
 
-    if t:
-        start = time.time()
+    commands [list] : list of commands to run on each compute node
+    hosts [list] : list of hosts to connect to
 
-    cwd = os.getcwd()
-    varPath = '~/.bash_profile'
+    returns connection object and results unless KeyboardInterrupt
+    '''
+
+    if len(hosts) > 1:
+        c = fabric.SerialGroup(hosts)
+    else:
+        c = fabric.Connection(hosts)
+
+    try:
+        results = []
+        for command in commands:
+            res = c.run(command)
+            results.append(res)
+
+        return c, results
+
+    except KeyboardInterrupt:
+        c.close()
+
+def getNodes(n):
+    '''
+    n [int] : number of compute nodes to run on
+
+    returns backwards list of n compute nodes
+    '''
+
+    # Create list of available compute nodes
+    cn = []
+    for i in range(8):
+        for k in range(10):
+
+            if i == 0:
+                node = f'blc{k}'
+            else:
+                node = f'blc{i}{k}'
+
+            if int(node[-1])<=7 and node!='blc47': # skip blc47 because it has an error
+                cn.append(node)
+
+    cn = np.flip(cn)
+    cn = cn[:n]
+
+    return cn
+
+def getFalseIndexes(sqlTable, cns):
+    '''
+    Get indexes of the sqlTable rows that have not been run through turboSETI
+
+    sqlTable [string] : Name of sql table in GCP BL FileTracking SQL Database
+    cns [list] : list of compute nodes to run on
+
+    returns indexes
+    '''
 
     mysql = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
                             password=os.environ['GCP_PASS'], database='FileTracking')
@@ -21,11 +75,9 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
             FROM {sqlTable}
             WHERE turboSETI='FALSE'
             '''
+    cursor = mysql.cursor()
 
     fileinfo = pd.read_sql(query, mysql)
-
-    if debug:
-        print(f'table used : \n{fileinfo}')
 
     # Create 2D array of indexes
     spliced = fileinfo['splice'].to_numpy()
@@ -45,8 +97,17 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
         whereID = np.where(arg)[0]
         ii2D.append(whereID)
 
-    if debug or slowdebug:
-        print(f'indexes used: {ii2D}')
+    # Write compute node to run on to SQL table
+    for cn, ii in zip(cns, ii2D):
+        sqlcmd = f'''
+                 UPDATE {sqlTable}
+                 SET compute_node={cn}
+                 WHERE row_num={tuple(ii.tolist())}
+                 '''
+        cursor.execute(sqlcmd)
+
+    # Commit once list is done
+    mysql.commit()
 
     # Get number of files running through
     length = 0
@@ -54,58 +115,7 @@ def splitRun(nnodes, debug, t, outDir, splicedonly, unsplicedonly, sqlTable, slo
         length+=len(row)
     print(f"Running turboSETI on {length} files")
 
-    # Create list of available compute nodes
-    cn = []
-    for i in range(8):
-        for k in range(10):
-
-            if i == 0:
-                node = f'blc{k}'
-            else:
-                node = f'blc{i}{k}'
-
-            if int(node[-1])<=7 and node!='blc47': # skip blc47 because it has an error
-                cn.append(node)
-
-    # Choose compute nodes starting with highest number
-    cn = np.flip(cn)
-    cn = cn[:nnodes]
-
-    print(f'Running on compute nodes {min(cn)} to {max(cn)}')
-    print(f'Writing files to {outDir}')
-    # Run on separate compute nodes
-    ps = []
-    for ii, node in zip(ii2D, cn):
-
-        if len(ii) != 0:
-
-            condaenv = '/home/noahf/miniconda3/bin/activate'
-
-            print(f"Running turboSETI on {len(ii)} files for cadence {fileinfo['target_name'][ii].to_numpy()[0]} on compute node: {node}")
-
-            if debug:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --test {debug} --sqlTable {sqlTable}"]
-
-            else:
-                cmd = ['ssh', node, f"source {condaenv} runTurbo ; source {varPath} ; python3 {cwd}/wrapTurbo.py --ii '{ii.tolist()}' --timer {t} --outdir {outDir} --sqlTable {sqlTable}"]
-
-            ssh = sp.Popen(cmd, universal_newlines=True, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            ps.append(ssh)
-            if slowdebug:
-                print(ssh.stdout.readlines(), ssh.stderr.readlines())
-
-    try:
-        for p in ps:
-            p.communicate()
-            
-    except KeyboardInterrupt:
-        print('terminating processes...')
-        for p in ps:
-            p.terminate()
-        print('All Processes Terminated')
-
-    if t:
-        print(time.time()-start)
+    return ii2D
 
 def main():
     '''
@@ -137,22 +147,37 @@ def main():
     RETURNS
     TurboSETI output files in subdirectories labelled by the ON target for each
     cadence. These subdirectories will be stored in directory specified by outdir
-
     '''
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--nnodes', help='Number of Compute nodes to run on', type=int, default=64)
-    parser.add_argument('--debug', help='if true run script in debug mode', type=bool, default=False)
-    parser.add_argument('--timer', help='times run if true', type=bool, default=True)
-    parser.add_argument('--outdir', help='Output Directory for turboSETI files', type=str, default='/datax2/scratch/noahf')
-    parser.add_argument('--sqlTable', help='Table name in the sql database', type=str)
-    parser.add_argument('--splicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
-    parser.add_argument('--unsplicedonly', help='Should it be run on only the spliced files', type=bool, default=False)
-    parser.add_argument('--slowdebug', type=bool, default=False)
+    parser.add_argument('--nnodes', help='number of copmute nodes', type=int, default=64)
+    parser.add_argument('--sqlTable', help='name of SQL table to connect to', type=str)
+    parser.add_argument('--outdir', help='Directory for turboSETI outfiles', type=str, default='/datax2/scratch/noahf')
+    parser.add_argument('--timer', default=True)
     args = parser.parse_args()
 
-    splitRun(args.nnodes, args.debug, args.timer, args.outdir, args.splicedonly, args.unsplicedonly, args.sqlTable, slowdebug=args.slowdebug)
+    if args.timer:
+        start = time.time()
+
+    cns = getNodes(args.nnodes)
+    iis = getFalseIndexes(args.sqlTable)
+
+    varPath = '~/.bash_profile'
+    condaenv = '/home/noahf/miniconda3/bin/activate'
+
+    cmds = [f'source {condaenv} runTurbo',
+            f'source {varPath}',
+            f"python3 {os.getcwd()}/wrapTurbo.py --timer {args.timer} --outdir {args.outdir} --sqlTable {args.sqlTable}"]
+
+    c, results = sshCommand(cmds, cns)
+
+    if args.timer:
+        print('Runtime: ', time.time()-start)
+
+    print(results)
+
+
 
 if __name__ == '__main__':
     sys.exit(main())

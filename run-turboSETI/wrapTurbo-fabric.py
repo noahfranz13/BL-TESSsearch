@@ -5,7 +5,7 @@ import pandas as pd
 import pymysql
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 
-def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
+def wrap_turboSETI(outDir, sqlTable, t=True, test=False):
     '''
     outDir : directory to store output subdirectories
     sqlTable : input SQL table name
@@ -13,15 +13,6 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
     returns : outputs .dat files from turboSETI
     '''
-
-    # Make sure index list is an Array
-    if type(iis) == str:
-        if iis[0] == '[' or iis[-1] == ']':
-            iis = np.fromstring(iis.strip('[]'), dtype=int, sep=',')
-        else:
-            print('Unexpected Format')
-    elif type(iis) != type(np.array([])):
-        iis = np.array(iis)
 
     # Read in mysql database
     db = pymysql.connect(host=os.environ['GCP_IP'], user=os.environ['GCP_USR'],
