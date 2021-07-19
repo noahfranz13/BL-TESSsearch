@@ -15,3 +15,4 @@ dependencies:
      - git+https://github.com/UCBerkeleySETI/blimpy
      - git+https://github.com/UCBerkeleySETI/turbo_seti
      - pymysql
+     - google-cloud-bigquery[bqstorage,pandas]
