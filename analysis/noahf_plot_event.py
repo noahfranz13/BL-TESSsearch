@@ -244,12 +244,19 @@ def make_waterfall_plots(fil_file_list, on_source_name, f_start, f_stop, drift_r
         wf = bl.Waterfall(filename, f_start=f_start, f_stop=f_stop, max_load=max_load)
         # make plot with plot_waterfall
         source_name = source_name_list[ii]
-        this_plot = plot_waterfall(wf,
-                                   source_name,
-                                   f_start=f_start,
-                                   f_stop=f_stop,
-                                   transit_times=pltTransit
-                                   **kwargs)
+        if plotTransit:
+            this_plot = plot_waterfall(wf,
+                                       source_name,
+                                       f_start=f_start,
+                                       f_stop=f_stop,
+                                       transit_times=plotTransit[ii]
+                                       **kwargs)
+        else:
+            this_plot = plot_waterfall(wf,
+                                       source_name,
+                                       f_start=f_start,
+                                       f_stop=f_stop,
+                                       **kwargs)
 
         # calculate parameters for estimated drift line
         t_elapsed = Time(wf.header['tstart'], format='mjd').unix - Time(t0, format='mjd').unix
