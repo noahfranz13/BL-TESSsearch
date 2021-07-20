@@ -13,7 +13,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
     returns : outputs .dat files from turboSETI
     '''
-
+    
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -56,17 +56,16 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         outdir = os.path.join(outDir, f"TOI-{tois[ii]}")
 
         if not test:
-            # Write to log file
-            outlog = os.path.join(outdir, f'{tois[ii]}-cadence.log')
-            with open(outlog, 'a') as f:
-                f.write(f'Starting turboSETI for {infile}\n')
 
-        if not test:
-
-            # Make out directory if it doesn't exist
+            # make out directory it if doesn't exits
             print(outdir)
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
+        
+            # Write to log file
+            outlog = os.path.join(outdir, f'{tois[ii]}-cadence.log')
+            with open(outlog, 'a+') as f:
+                f.write(f'Starting turboSETI for {infile}\n')
 
             # Run turboSETI
             fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
@@ -82,7 +81,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
         if t:
             runtime = time.time() - start
             if not test:
-                with open(outlog, 'a') as f:
+                with open(outlog, 'a+') as f:
                     f.write('{} Runtime : {}\n'.format(target[ii], runtime))
 
             sqlcmd = f"""
@@ -106,7 +105,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             db.commit()
 
         if not test:
-            with open(outlog, 'a') as f:
+            with open(outlog, 'a+') as f:
                 f.write(f'Finished running turboSETI on {infile}')
                 f.write('\n')
 
