@@ -6,7 +6,6 @@ import os, glob
 import urllib
 import pandas as pd
 import pymysql
-from google.cloud import bigquery
 import numpy as np
 from barycorrpy import utc_tdb
 from astropy.coordinates import SkyCoord, EarthLocation
