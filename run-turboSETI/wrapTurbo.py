@@ -13,7 +13,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
     returns : outputs .dat files from turboSETI
     '''
-    
+
     # Make sure index list is an Array
     if type(iis) == str:
         if iis[0] == '[' or iis[-1] == ']':
@@ -61,7 +61,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
             print(outdir)
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
-        
+
             # Write to log file
             outlog = os.path.join(outdir, f'{tois[ii]}-cadence.log')
             with open(outlog, 'a+') as f:
@@ -91,6 +91,7 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
                           turboSETI='TRUE'
                       WHERE row_num={row_num[ii]}
                       """
+
             cursor.execute(sqlcmd)
             db.commit()
 
@@ -130,7 +131,11 @@ def main():
     parser.add_argument('--test', help='If true, script enters testing mode', type=bool, default=False)
     args = parser.parse_args()
 
-    wrap_turboSETI(args.ii, args.outdir, args.sqlTable, t=args.timer, test=args.test)
+    try:
+        wrap_turboSETI(args.ii, args.outdir, args.sqlTable, t=args.timer, test=args.test)
+    except Exception as e:
+        with open(outlog, 'a+') as f:
+            f.write(e)
 
 if __name__ == '__main__':
 
