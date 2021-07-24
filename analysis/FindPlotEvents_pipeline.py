@@ -6,7 +6,6 @@ import os, glob
 import urllib
 import pandas as pd
 import pymysql
-from google.cloud import bigquery
 import numpy as np
 from barycorrpy import utc_tdb
 from astropy.coordinates import SkyCoord, EarthLocation
@@ -30,30 +29,27 @@ def FindTransitTimes(dataDir):
     TESStoi = pd.read_csv(toiPath)
 
     # Get TESS Targets in GBT go_scans database
-    #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/noahf/breakthrough-listen-sandbox-1b8109ec7f6b.json"
-    #client = bigquery.Client()
+    
     BLclient = pymysql.connect(host=os.environ['GCP_IP'],user=os.environ['GCP_USR'],
                               password=os.environ['GCP_PASS'],database="FileTracking")
 
     BLquery = """
     SELECT *
-    FROM `breakthrough-listen-sandbox.us-west2.noahf-tess-filetracking`
+    FROM `infiles`
     WHERE turboSETI='TRUE'
     """
 
-    go_scans = pd.read_sql(BLquery, BLclient)#client.query(BLquery).to_dataframe()
+    go_scans = pd.read_sql(BLquery, BLclient)
 
     # Get timing info on TESS target
     onTarget = sorted(glob.glob(dataDir + '/*.dat'))[0].split('.')[0].split('_')[-2]
     on_toi = np.where(TESStoi['TIC ID'].to_numpy() == int(onTarget[3:]))[0]
-    on_scans = np.where(go_scans['target_name'].to_numpy() == onTarget)[0]
-    
-    print(type(onTarget[3:]), type(TESStoi['TIC ID'][0]), on_toi, on_scans)
+    on_scans = np.where(go_scans['toi'].to_numpy() == onTarget)[0]
 
     epoch = TESStoi['Epoch (BJD)'].to_numpy()[on_toi]
     period = TESStoi['Period (days)'].to_numpy()[on_toi]
     tt = TESStoi['Duration (hours)'].to_numpy()[on_toi]/24/2
-    obsTime = go_scans['utc_observed'].to_numpy()[on_scans]
+    obsTime = go_scans['obs_time'].to_numpy()[on_scans]
     
     dist = TESStoi['Stellar Distance (pc)'].to_numpy()[0]
     PMRA = float(TESStoi['PM RA (mas/yr)'].to_numpy()[0])
@@ -67,32 +63,35 @@ def FindTransitTimes(dataDir):
     
     # Convert
     gbtloc = EarthLocation.of_site('Green Bank Telescope')
-    tUTC = Time(obsTime, location=gbtloc)
-    obst = utc_tdb.JDUTC_to_BJDTDB(tUTC, ra=float(coords.to_string().split()[0]),
+    tUTC = Time(obsTime, format='mjd', scale='utc', location=gbtloc)
+    tbjd = utc_tdb.JDUTC_to_BJDTDB(tUTC, ra=float(coords.to_string().split()[0]),
                                        dec=float(coords.to_string().split()[1]),
                                        pmra=PMRA, pmdec=PMdec,
                                        px=parallax,
                                        obsname='Green Bank Telescope')[0]
 
-    diff = np.abs(obst-epoch)
-    numRot = int(np.ceil(diff/period))
+    transitTimes = []
+    for obst in tbjd:
+        
+        diff = np.abs(obst-epoch)
+        numRot = int(np.ceil(diff/period))
 
-    centerTransitTimes = []
-    t = epoch
-    for i in range(numRot):
-        centerTransitTimes.append(t)
-        if obst < epoch: # check if gbt obs happened before or after epoch
-            t-=period
-        else:
-            t+=period
+        centerTransitTimes = []
+        t = epoch
+        for i in range(numRot):
+            centerTransitTimes.append(t)
+            if obst < epoch: # check if gbt obs happened before or after epoch
+                t-=period
+            else:
+                t+=period
 
-    # Since last value in transit time list is closest to observing time:
-    epochf = centerTransitTimes[-1]
-    startTransit = epochf - tt
-    endTransit = epochf + tt
-    transitTimes = [startTransit, endTransit]
-    
-    relStart = 
+        # Since last value in transit time list is closest to observing time:
+        epochf = centerTransitTimes[-1] # Units of days in BJD
+        startTransit = epochf - tt
+        endTransit = epochf + tt
+        start_end = np.array([startTransit[0], endTransit[0]])
+        normTimes = (start_end - obst) * 24 * 3600
+        transitTimes.append(normTimes)
 
     return transitTimes
 
@@ -107,6 +106,7 @@ def FindPlotEvents(dataDir, threshold=3, transitTimes=True):
 
     if transitTimes:
         transitTimes = FindTransitTimes(dataDir)
+        print(transitTimes)
 
     else:
         transitTimes = None
