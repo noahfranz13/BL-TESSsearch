@@ -30,7 +30,6 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
     query = f'''
             SELECT *
             FROM {sqlTable}
-            WHERE turboSETI='FALSE'
             '''
 
     fileinfo = pd.read_sql(query, db)

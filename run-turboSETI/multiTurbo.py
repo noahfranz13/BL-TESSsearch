@@ -52,7 +52,6 @@ def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
     query = f'''
             SELECT *
             FROM {sqlTable}
-            WHERE turboSETI='FALSE'
             '''
 
     fileinfo = pd.read_sql(query, mysql)
@@ -87,7 +86,7 @@ def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
         length+=len(row)
     print(f"Running turboSETI on {length} files")
 
-    return ii2D
+    return ii2D, fileinfo
 
 def multiCommand(nodes, commands, slowdebug=False):
     '''
@@ -151,16 +150,18 @@ def main():
     print(f'Writing files to {args.outdir}')
 
     cns = getNodes(args.nnodes)
-    ii2D = getIndex(args.sqlTable,
+    ii2D, table = getIndex(args.sqlTable,
                     splicedonly=args.splicedonly,
                     unsplicedonly=args.unsplicedonly,
                     debug=args.debug)
 
+    ifTurbo = table.turboSETI.to_numpy()
     cmds = []
     nodes = []
-    for node, ii in zip(cns, ii2D):
+    for node, iis in zip(cns, ii2D):
 
-        if len(ii) != 0:
+        ii = iis[ifTurbo[iis] == 'FALSE']
+        if len(ii) > 0:
 
             print(f"Running turboSETI on {len(ii)} files on compute node: {node}")
 
