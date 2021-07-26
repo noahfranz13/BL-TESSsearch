@@ -67,8 +67,13 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
                 f.write(f'Starting turboSETI for {infile}\n')
 
             # Run turboSETI
-            fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
-            fd.search(n_partitions=32)
+            try:
+                fd = FindDoppler(infile, max_drift=4, snr=10, out_dir=outdir)
+                fd.search(n_partitions=32)
+            except Exception as e:
+                with open(outlog, 'a+') as f:
+                    f.write(str(e))
+                sys.exit()
 
         # Also initiate cursor for updating the table later
         cursor = db.cursor()
@@ -77,32 +82,39 @@ def wrap_turboSETI(iis, outDir, sqlTable, t=True, test=False):
 
         name = filenames[ii].split('.')[0] + '.dat'
 
-        if t:
-            runtime = time.time() - start
-            if not test:
-                with open(outlog, 'a+') as f:
-                    f.write('{} Runtime : {}\n'.format(target[ii], runtime))
+        try:
+            if t:
+                runtime = time.time() - start
+                if not test:
+                    with open(outlog, 'a+') as f:
+                        f.write('{} Runtime : {}\n'.format(target[ii], runtime))
 
-            sqlcmd = f"""
-                      UPDATE {sqlTable}
-                      SET runtime={runtime},
-                          outpath='{os.path.join(outdir,name)}',
-                          turboSETI='TRUE'
-                      WHERE row_num={row_num[ii]}
-                      """
+                sqlcmd = f"""
+                          UPDATE {sqlTable}
+                          SET runtime={runtime},
+                              outpath='{os.path.join(outdir,name)}',
+                              turboSETI='TRUE'
+                          WHERE row_num={row_num[ii]}
+                          """
 
-            cursor.execute(sqlcmd)
-            db.commit()
+                cursor.execute(sqlcmd)
+                db.commit()
 
-        else:
-            sqlcmd = f"""
-                      UPDATE {sqlTable}
-                      SET outpath='{os.path.join(outdir,name)}',
-                          turboSETI='TRUE'
-                      WHERE row_num={row_num[ii]}
-                      """
-            cursor.execute(sqlcmd)
-            db.commit()
+            else:
+                sqlcmd = f"""
+                          UPDATE {sqlTable}
+                          SET outpath='{os.path.join(outdir,name)}',
+                              turboSETI='TRUE'
+                          WHERE row_num={row_num[ii]}
+                          """
+                cursor.execute(sqlcmd)
+                db.commit()
+
+        except Exception as e:
+            with open(outlog, 'a+') as f:
+                f.write(str(e))
+            sys.exit()
+
 
         if not test:
             with open(outlog, 'a+') as f:
@@ -129,12 +141,8 @@ def main():
     parser.add_argument('--timer', help='Should the runtime be recorded', type=bool, default=True)
     parser.add_argument('--test', help='If true, script enters testing mode', type=bool, default=False)
     args = parser.parse_args()
-
-    try:
-        wrap_turboSETI(args.ii, args.outdir, args.sqlTable, t=args.timer, test=args.test)
-    except Exception as e:
-        with open(outlog, 'a+') as f:
-            f.write(e)
+   
+    wrap_turboSETI(args.ii, args.outdir, args.sqlTable, t=args.timer, test=args.test)
 
 if __name__ == '__main__':
 
