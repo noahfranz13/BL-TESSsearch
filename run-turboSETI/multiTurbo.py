@@ -52,7 +52,6 @@ def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
     query = f'''
             SELECT *
             FROM {sqlTable}
-            WHERE turboSETI='FALSE'
             '''
 
     fileinfo = pd.read_sql(query, mysql)
@@ -63,17 +62,18 @@ def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
     # Create 2D array of indexes
     spliced = fileinfo['splice'].to_numpy()
     tois = fileinfo['toi'].to_numpy()
+    turbo = fileinfo['turboSETI'].to_numpy()
 
     uniqueIDs = np.unique(tois)
     ii2D = []
     for id in uniqueIDs:
 
         if splicedonly:
-            arg = (spliced == 'spliced') * (tois == id)
+            arg = (spliced == 'spliced') * (tois == id) * (turbo == 'FALSE')
         elif unsplicedonly:
-            arg = (spliced == 'unspliced') * (tois == id)
+            arg = (spliced == 'unspliced') * (tois == id) * (turbo == 'FALSE')
         else:
-            arg = (tois == id)
+            arg = (tois == id) * (turbo == 'FALSE')
 
         whereID = np.where(arg)[0]
         ii2D.append(whereID)
@@ -86,8 +86,10 @@ def getIndex(sqlTable, splicedonly, unsplicedonly, debug=False):
     for row in ii2D:
         length+=len(row)
     print(f"Running turboSETI on {length} files")
-
+    
     return ii2D
+
+    
 
 def multiCommand(nodes, commands, slowdebug=False):
     '''
@@ -159,8 +161,8 @@ def main():
     cmds = []
     nodes = []
     for node, ii in zip(cns, ii2D):
-
-        if len(ii) != 0:
+        
+        if len(ii) > 0:
 
             print(f"Running turboSETI on {len(ii)} files on compute node: {node}")
 
