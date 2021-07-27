@@ -46,9 +46,10 @@ def main():
             dd = dir.decode()
             node = dd[5:10]
 
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 FindPlot.py --dir {dd}"]
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 FindPlot.py --dir {dd[10:]}"]
             cmds.append(cmd)
 
+    #print(cmds)
     ps = multiCommand(cmds)
 
     for p in ps:
