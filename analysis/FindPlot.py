@@ -148,12 +148,12 @@ def FindPlotEvents(dataDir, threshold=3, transitTimes=True):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--outdir')
+    parser.add_argument('--dir', default=os.getcwd())
     parser.add_argument('--threshold', default=3)
     parser.add_argument('--transitTimes', default=False)
     args = parser.parse_args()
 
-    FindPlotEvents(args.outdir, threshold=args.threshold, transitTimes=args.transitTimes)
+    FindPlotEvents(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
 
 if __name__ == '__main__':
     sys.exit(main())
