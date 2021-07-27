@@ -2,7 +2,7 @@
 # Uses both find_event_pipeline and plot_event_pipeline turboSETI methods
 # to create waterfall plots of the events found in a full cadence
 
-import os, glob
+import os, glob, sys
 import urllib
 import pandas as pd
 import pymysql
