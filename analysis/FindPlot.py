@@ -29,7 +29,7 @@ def FindTransitTimes(dataDir):
     TESStoi = pd.read_csv(toiPath)
 
     # Get TESS Targets in GBT go_scans database
-    
+
     BLclient = pymysql.connect(host=os.environ['GCP_IP'],user=os.environ['GCP_USR'],
                               password=os.environ['GCP_PASS'],database="FileTracking")
 
@@ -50,7 +50,7 @@ def FindTransitTimes(dataDir):
     period = TESStoi['Period (days)'].to_numpy()[on_toi]
     tt = TESStoi['Duration (hours)'].to_numpy()[on_toi]/24/2
     obsTime = go_scans['obs_time'].to_numpy()[on_scans]
-    
+
     dist = TESStoi['Stellar Distance (pc)'].to_numpy()[0]
     PMRA = float(TESStoi['PM RA (mas/yr)'].to_numpy()[0])
     PMdec = float(TESStoi['PM Dec (mas/yr)'].to_numpy()[0])
@@ -58,9 +58,9 @@ def FindTransitTimes(dataDir):
     ra = TESStoi['RA'].to_numpy()[0]
     dec = TESStoi['Dec'].to_numpy()[0]
     coords = SkyCoord(ra, dec, unit=(u.hourangle, u.deg), frame='icrs')
-    
+
     parallax = (1/dist) * 10**(-3) # units of mas
-    
+
     # Convert
     gbtloc = EarthLocation.of_site('Green Bank Telescope')
     tUTC = Time(obsTime, format='mjd', scale='utc', location=gbtloc)
@@ -72,7 +72,7 @@ def FindTransitTimes(dataDir):
 
     transitTimes = []
     for obst in tbjd:
-        
+
         diff = np.abs(obst-epoch)
         numRot = int(np.ceil(diff/period))
 
@@ -101,7 +101,7 @@ def FindPlotEvents(dataDir, threshold=3, transitTimes=True):
 
     returns : waterfall plots of data
     '''
-    
+
     from turbo_seti.find_event.find_event_pipeline import find_event_pipeline
 
     if transitTimes:
@@ -135,12 +135,25 @@ def FindPlotEvents(dataDir, threshold=3, transitTimes=True):
     # run plot_event_pipeline
     print()
     print('####################### Beginning Plot Event Pipeline #######################')
-    
+
     if transitTimes:
         # Import local functions
         from noahf_plot_event_pipeline import plot_event_pipeline
         plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
-    
+
     else:
         from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
         plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--outdir')
+    parser.add_argument('--threshold', default=3)
+    parser.add_argument('--transitTimes', default=False)
+    args = parser.parse_args()
+
+    FindPlotEvents(args.outdir, threshold=args.threshold, transitTimes=args.transitTimes)
+
+if __name__ == '__main__':
+    sys.exit(main())
