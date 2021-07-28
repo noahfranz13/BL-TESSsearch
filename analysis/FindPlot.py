@@ -14,7 +14,7 @@ from astropy.time import Time
 from astropy import units as u
 
 def getLen(dir):
-    files = glob.glob(dir)
+    files = glob.glob(dir+'/*')
     return len(files)
 
 def FindTransitTimes(dataDir):
@@ -153,7 +153,7 @@ def FindPlotEvents_1cad(dataDir, threshold=3, transitTimes=True):
 def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
 
     from turbo_seti.find_event.find_event_pipeline import find_event_pipeline
-    from blimpy import Waterfall
+    #from blimpy import Waterfall
     from blimpy.io.hdf_reader import H5Reader
 
     if transitTimes:
@@ -170,10 +170,12 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
     filenum = 0
     h5cadences = []
     datcadences = []
-    while filenum <= len(h5list):
-        hdr = H5Reader.read_header(Waterfall(h5list[filenum], load_data=False))
+    while filenum < len(h5list):
+        h5 = H5Reader(h5list[filenum], load_data=False)
+        hdr = h5.read_header()
+        #print(hdr)
         fch1 = hdr['fch1']
-        nchan = hdr['nchan']
+        nchan = hdr['nchans']
 
         if fch1 == nchan:
 
@@ -190,6 +192,7 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
         else:
             filenum += 1
 
+    print(h5cadences)
     for ii in range(len(h5cadences)):
 
         h5listPath = os.path.join(dataDir, f'h5-list-{ii}.lst')
@@ -229,13 +232,14 @@ def main():
     args = parser.parse_args()
 
     dirl = getLen(args.dir)
+    print(dirl)
 
     if dirl-1 == 18 or dirl == 18: # for spliced file directories (-1 in case it has a log file)
         FindPlotEvents_1cad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
     elif dirl > 6 and ((dirl-1)%6 == 0 or dirl%6 == 0):
         FindPlotEvents_ncad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
     else:
-        with open('analysis.log', 'w') as log:
+        with open(os.path.join(args.dir, 'analysis.log'), 'w') as log:
             log.write('This directory had an odd number of files and can be removed')
 
 if __name__ == '__main__':
