@@ -14,7 +14,8 @@ from astropy.time import Time
 from astropy import units as u
 
 def getLen(dir):
-    files = glob.glob(dir+'/*')
+    files = glob.glob(dir+'/*.h5')
+    print(files)
     return len(files)
 
 def FindTransitTimes(dataDir):
@@ -164,8 +165,8 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
         transitTimes = None
 
     # create .lst file for .h5 files
-    h5list = sorted(glob.glob(dataDir + '/*.h5'))
-    datlist = sorted(glob.glob(dataDir + '/*.dat'))
+    h5list = np.array(sorted(glob.glob(dataDir + '/*.h5')))
+    datlist = np.array(sorted(glob.glob(dataDir + '/*.dat')))
 
     cns = np.array([file.split('/')[-1][:5] for file in h5list])
 
@@ -180,9 +181,10 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
             fch1s = []
             nchans = []
             for file in h5cad:
-                hdr = H5Reader.read_header(Waterfall(file, load_data=False))
+                h5 = H5Reader(file, load_data=False)
+                hdr = h5.read_header()
                 fch1s.append(hdr['fch1'])
-                nchans.append(hdr['nchan'])
+                nchans.append(hdr['nchans'])
 
             if len(np.unique(fch1s)) == 1 and len(np.unique(nchans)) == 1:
                 h5cadences.append(h5cad)
@@ -199,26 +201,29 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
 
         datlistPath = os.path.join(dataDir, f'dat-list-{ii}.lst')
         with open(datlistPath, 'w') as L:
-            for dat in datacadences[ii]:
+            for dat in datcadences[ii]:
                 L.write(dat+'\n')
 
         # run find_event_pipeline
         print('####################### Beginning Find Event Pipeline #######################')
         csvPath = os.path.join(dataDir, f'events-list-{ii}.csv')
-        find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datlist), csv_name=csvPath, saving=True);
+        find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datcadences[ii]), csv_name=csvPath, saving=True);
 
         # run plot_event_pipeline
         print()
         print('####################### Beginning Plot Event Pipeline #######################')
 
-        if transitTimes:
-            # Import local functions
-            from noahf_plot_event_pipeline import plot_event_pipeline
-            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
+        if os.path.exists(csvPath):
+            if transitTimes:
+                # Import local functions
+                from noahf_plot_event_pipeline import plot_event_pipeline
+                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
 
+            else:
+                from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
+                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
         else:
-            from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
-            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
+            print('No events to plot')
 
 def main():
     import argparse
@@ -231,9 +236,9 @@ def main():
     dirl = getLen(args.dir)
     print(dirl)
 
-    if dirl-1 == 18 or dirl == 18: # for spliced file directories (-1 in case it has a log file)
+    if dirl == 6: # for spliced file directories (-1 in case it has a log file)
         FindPlotEvents_1cad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
-    elif dirl > 6 and ((dirl-1)%6 == 0 or dirl%6 == 0):
+    elif dirl > 6 and dirl%6 == 0:
         FindPlotEvents_ncad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
     else:
         with open(os.path.join(args.dir, 'analysis.log'), 'w') as log:
