@@ -167,30 +167,27 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
     h5list = sorted(glob.glob(dataDir + '/*.h5'))
     datlist = sorted(glob.glob(dataDir + '/*.dat'))
 
-    filenum = 0
+    cns = np.array([file.split('/')[-1][:5] for file in h5list])
+
     h5cadences = []
     datcadences = []
-    while filenum < len(h5list):
-        h5 = H5Reader(h5list[filenum], load_data=False)
-        hdr = h5.read_header()
-        #print(hdr)
-        fch1 = hdr['fch1']
-        nchan = hdr['nchans']
+    for cn in np.unique(cns):
+        if cn[0] == 'b':
+            wherecn = np.where(cns == cn)[0]
+            h5cad = h5list[wherecn]
+            datcad = datlist[wherecn]
 
-        if fch1 == nchan:
+            fch1s = []
+            nchans = []
+            for file in h5cad:
+                hdr = H5Reader.read_header(Waterfall(file, load_data=False))
+                fch1s.append(hdr['fch1'])
+                nchans.append(hdr['nchan'])
 
-            with h5list as h:
-                h5cad = np.array([h[filenum], h[filenum+1], h[filenum+2], h[filenum+3], h[filenum+4], h[filenum+5]])
-            with datlist as d:
-                datcad = np.array([d[filenum], d[filenum+1], d[filenum+2], d[filenum+3], d[filenum+4], d[filenum+5]])
+            if len(np.unique(fch1s)) == 1 and len(np.unique(nchans)) == 1:
+                h5cadences.append(h5cad)
+                datcadences.append(datcad)
 
-            datcadences.append(datcad)
-            h5cadences.append(h5cad)
-
-            filenum += 6
-
-        else:
-            filenum += 1
 
     print(h5cadences)
     for ii in range(len(h5cadences)):
