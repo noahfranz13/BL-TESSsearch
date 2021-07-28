@@ -15,7 +15,7 @@ from astropy import units as u
 
 def getLen(dir):
     files = glob.glob(dir+'/*.h5')
-    print(files)
+    #print(files)
     return len(files)
 
 def FindTransitTimes(dataDir):
@@ -133,23 +133,26 @@ def FindPlotEvents_1cad(dataDir, threshold=3, transitTimes=True):
         for dat in datlist:
             L.write(dat+'\n')
 
-    # run find_event_pipeline
-    print('####################### Beginning Find Event Pipeline #######################')
-    csvPath = os.path.join(dataDir, 'events-list.csv')
-    find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datlist), csv_name=csvPath, saving=True);
+    if len(datlist) == 6:
+        # run find_event_pipeline
+        print('####################### Beginning Find Event Pipeline #######################')
+        csvPath = os.path.join(dataDir, 'events-list.csv')
+        find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datlist), csv_name=csvPath, saving=True);
 
-    # run plot_event_pipeline
-    print()
-    print('####################### Beginning Plot Event Pipeline #######################')
+        # run plot_event_pipeline
+        print()
+        print('####################### Beginning Plot Event Pipeline #######################')
 
-    if transitTimes:
-        # Import local functions
-        from noahf_plot_event_pipeline import plot_event_pipeline
-        plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
+        if transitTimes:
+            # Import local functions
+            from noahf_plot_event_pipeline import plot_event_pipeline
+            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
 
+        else:
+            from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
+            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
     else:
-        from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
-        plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
+        raise Exception(f'length of input cadence to find_event_pipeline is {len(datlist)} not 6')
 
 def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
 
@@ -191,7 +194,7 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
                 datcadences.append(datcad)
 
 
-    print(h5cadences)
+    #print(h5cadences)
     for ii in range(len(h5cadences)):
 
         h5listPath = os.path.join(dataDir, f'h5-list-{ii}.lst')
@@ -204,26 +207,29 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
             for dat in datcadences[ii]:
                 L.write(dat+'\n')
 
-        # run find_event_pipeline
-        print('####################### Beginning Find Event Pipeline #######################')
-        csvPath = os.path.join(dataDir, f'events-list-{ii}.csv')
-        find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datcadences[ii]), csv_name=csvPath, saving=True);
+        if len(datcadences[ii]) == 6:
+            # run find_event_pipeline
+            print('####################### Beginning Find Event Pipeline #######################')
+            csvPath = os.path.join(dataDir, f'events-list-{ii}.csv')
+            find_event_pipeline(datlistPath, filter_threshold=threshold, number_in_cadence=len(datcadences[ii]), csv_name=csvPath, saving=True);
 
-        # run plot_event_pipeline
-        print()
-        print('####################### Beginning Plot Event Pipeline #######################')
+            # run plot_event_pipeline
+            print()
+            print('####################### Beginning Plot Event Pipeline #######################')
 
-        if os.path.exists(csvPath):
-            if transitTimes:
-                # Import local functions
-                from noahf_plot_event_pipeline import plot_event_pipeline
-                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
+            if os.path.exists(csvPath):
+                if transitTimes:
+                    # Import local functions
+                    from noahf_plot_event_pipeline import plot_event_pipeline
+                    plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
 
+                else:
+                    from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
+                    plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
             else:
-                from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
-                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
+                print('No events to plot :(')
         else:
-            print('No events to plot')
+            raise Exception(f'length of input cadence to find_event_pipeline is {len(datcadences[ii])} not 6')
 
 def main():
     import argparse
