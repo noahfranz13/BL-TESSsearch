@@ -3,11 +3,19 @@ import subprocess as sp
 import numpy as np
 
 def getPaths():
-    #cmd = ['find', '/mnt_blc*/datax2/scratch/noahf/', '-type', 'd', '-name', '*TOI*']
+
     cmd = 'find /mnt_blc*/datax2/scratch/noahf/ -type d -name *TOI*'
     find = sp.Popen(cmd, stdout=sp.PIPE, shell=True)
-    #print(find.communicate()[0])
-    return find.communicate()[0].split(b'\n')
+
+    dirs = find.communicate()[0].split(b'\n')
+
+    dirsToReturn = []
+    for dir in dirs:
+        dd = dir.decode()
+        if dd[-7:] != '-copied':
+            dirsToReturn.append(dd)
+
+    return dirsToReturn
 
 def getLen(dir):
     files = glob.glob(dir)
@@ -38,12 +46,12 @@ def main():
 
     allDirs = getPaths()
     condaenv = '/home/noahf/miniconda3/bin/activate'
-    
+
     cmds = []
-    for dir in allDirs:
+    for dd in allDirs:
 
         if len(dir) > 1:
-            dd = dir.decode()
+
             node = dd[5:10]
 
             cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 FindPlot.py --dir {dd[10:]}"]
