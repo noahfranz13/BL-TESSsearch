@@ -50,7 +50,7 @@ def main():
     cmds = []
     for dir in dirs:
 
-        dd = dir[10:]
+        dd = dir[:10]
         print(f'Finding band for {dir}')
 
         if len(dir) != 0:
@@ -63,7 +63,7 @@ def main():
 
             print('Running: ', cmd)
 
-    ps = multiCommand(cmds)
+    ps = multiCommand(cmds, slowdebug=True)
     
     for p in ps:
         p.communicate()
