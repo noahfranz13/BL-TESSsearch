@@ -14,7 +14,7 @@ from astropy.time import Time
 from astropy import units as u
 
 def getLen(dir):
-    files = glob.glob(dir+'/*.h5')
+    files = glob.glob(dir+'/*.dat')
     #print(files)
     return len(files)
 
@@ -121,9 +121,12 @@ def FindPlotEvents_1cad(dataDir, threshold=3, transitTimes=True):
     h5list = sorted(glob.glob(dataDir + '/*.h5'))
     h5listPath = os.path.join(dataDir, 'h5-list.lst')
 
-    with open(h5listPath, 'w') as L:
-        for h5 in h5list:
-            L.write(h5 + '\n')
+    if len(h5list) != 0:
+    	with open(h5listPath, 'w') as L:
+            for h5 in h5list:
+            	L.write(h5 + '\n')
+    else:
+        print(f'Using existing h5 list under h5-list.lst')
 
     # create .lst file for .dat files
     datlist = sorted(glob.glob(dataDir + '/*.dat'))
@@ -143,14 +146,15 @@ def FindPlotEvents_1cad(dataDir, threshold=3, transitTimes=True):
         print()
         print('####################### Beginning Plot Event Pipeline #######################')
 
-        if transitTimes:
-            # Import local functions
-            from noahf_plot_event_pipeline import plot_event_pipeline
-            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
+        if os.path.exists(csvPath):
+            if transitTimes:
+                # Import local functions
+                from noahf_plot_event_pipeline import plot_event_pipeline
+                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False, transit_times=transitTimes)
 
-        else:
-            from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
-            plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
+            else:
+                from turbo_seti.find_event.plot_event_pipeline import plot_event_pipeline
+                plot_event_pipeline(csvPath, h5listPath, filter_spec=f'{threshold}', user_validation=False)
     else:
         raise Exception(f'length of input cadence to find_event_pipeline is {len(datlist)} not 6')
 
@@ -194,7 +198,6 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
                 datcadences.append(datcad)
 
 
-    #print(h5cadences)
     for ii in range(len(h5cadences)):
 
         h5listPath = os.path.join(dataDir, f'h5-list-{ii}.lst')
