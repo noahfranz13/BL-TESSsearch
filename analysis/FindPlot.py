@@ -192,11 +192,12 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
                 hdr = h5.read_header()
                 fch1s.append(hdr['fch1'])
                 nchans.append(hdr['nchans'])
-
+            print(fch1s, nchans)
             if len(np.unique(fch1s)) == 1 and len(np.unique(nchans)) == 1:
                 h5cadences.append(h5cad)
                 datcadences.append(datcad)
-
+            else:
+                raise Exception('More than one cadence in directory')
 
     for ii in range(len(h5cadences)):
 
@@ -243,13 +244,16 @@ def main():
     args = parser.parse_args()
 
     dirl = getLen(args.dir)
-    print(dirl)
+    print(f'Running on {dirl} files')
 
     if dirl == 6: # for spliced file directories (-1 in case it has a log file)
+        print('Running on one cadence')
         FindPlotEvents_1cad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
     elif dirl > 6 and dirl%6 == 0:
+        print(f'Running on {dirl/6} cadences')
         FindPlotEvents_ncad(args.dir, threshold=args.threshold, transitTimes=args.transitTimes)
     else:
+        print('This directory has an odd number of files')
         with open(os.path.join(args.dir, 'analysis.log'), 'w') as log:
             log.write('This directory had an odd number of files and can be removed')
 

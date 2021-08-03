@@ -17,10 +17,6 @@ def getPaths():
 
     return dirsToReturn
 
-def getLen(dir):
-    files = glob.glob(dir)
-    return len(files)
-
 def multiCommand(commands, slowdebug=False):
     '''
     Run n commands on n compute nodes
@@ -50,14 +46,15 @@ def main():
     cmds = []
     for dd in allDirs:
 
-        if len(dir) > 1:
+        if len(dd) > 1:
 
             node = dd[5:10]
 
-            cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 FindPlot.py --dir {dd[10:]}"]
+            cmd = ['ssh', node, f"source {condaenv} runTurbo ; python3 ~/BL-TESSsearch/analysis/FindPlot.py --dir {dd[10:]}"]
             cmds.append(cmd)
 
-    #print(cmds)
+            print(f'Running {cmd}')
+            
     ps = multiCommand(cmds)
 
     for p in ps:
