@@ -233,7 +233,9 @@ def FindPlotEvents_ncad(dataDir, threshold=3, transitTimes=True):
             else:
                 print('No events to plot :(')
         else:
-            raise Exception(f'length of input cadence to find_event_pipeline is {len(datcadences[ii])} not 6')
+            #raise Exception(f'length of input cadence to find_event_pipeline is {len(datcadences[ii])} not 6')
+            print('WARNING length of cadence does not equal 6, skipping this cadence')
+            continue
 
 def main():
     import argparse
