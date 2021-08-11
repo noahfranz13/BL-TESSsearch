@@ -31,19 +31,15 @@ go_scans = pd.read_sql(BLquery, BLtargets)
 go_scans['TIC ID'] = go_scans.target_name.apply(lambda v : int(v[3:]))
 gbt = go_scans[['TIC ID', 'target_name', 'utc_observed', 'session']]
 
-
-# Get full dataframe of TESS candidates
-url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-toiPath = os.path.join(os.getcwd(), 'TESS-toi.csv')
-urllib.request.urlretrieve(url, toiPath)
-TESStoi = pd.read_csv(toiPath)
+TESStoi = pd.read_csv('/home/noahf/BL-TESSsearch/Target-Selection/TESS-toi.csv')
 
 # Find TESS targets that transit during GBT observations
 
 inTransitID = []
 inTransitSession = []
-transitTimes = {'ticid' : [], 'ingress' : [], 'egress' : [], 'StartObs' : []}
+transitTimes = {'ticid' : [], 'session' : [], 'ingress' : [], 'egress' : []}
 gbtloc = EarthLocation.of_site('Green Bank Telescope')
+go_scans['StartObs'] = np.ones(len(go_scans))
 
 for ticid in gbt['TIC ID'].unique():
 
@@ -75,6 +71,9 @@ for ticid in gbt['TIC ID'].unique():
                                        obsname='Green Bank Telescope')[0]
 
     tbjd = tbjd[np.isfinite(tbjd)]
+    whereTID = np.where(go_scans['TIC ID'] == ticid)[0]
+    if len(tbjd) > 0:
+        go_scans.iloc[whereTID, -1] = tbjd
 
     # Does the GBT observation occur during a transit?
     if len(obsTime) >= numobs and period != 0: # Check for at least 3 obs
@@ -99,38 +98,64 @@ for ticid in gbt['TIC ID'].unique():
             # Since last value in transit time list is closest to observing time:
             epochf = centerTransitTimes[-1]
             startTransit = epochf - tt
-            endTransit = epochf + tt
+            endTransit = epochf + tt                
 
             if obst > startTransit and obst < endTransit:
-                inTransitID.append(ticid)
-                inTransitSession.append(session[ii])
 
                 transitTimes['ticid'].append(ticid)
+                transitTimes['session'].append(session[ii])
                 transitTimes['ingress'].append(startTransit)
                 transitTimes['egress'].append(endTransit)
-                transitTimes['StartObs'].append(obst)
-
-
-timeinfo = pd.DataFrame(transitTimes)
-
-groupedTime = timeinfo.groupby('ticid').min()
-
-print(groupedTime)
+                #transitTimes['StartObs'].append(obst)
 
 # Extract go_scans info for transiting TESS Targets
-# outFrame = []
-#
-# for tic, sess in zip(inTransitID, inTransitSession):
-#
-#     mask = (go_scans['TIC ID'] == tic) & (go_scans['session'] == sess)
-#
-#     if len(mask[mask==True]) >= numobs: # make sure target has 3 obs.
-#         outFrame.append(go_scans[mask])
-#
-# targets = pd.concat(outFrame).drop_duplicates()
-#
-# outFilePath = os.path.join(os.getcwd(), 'TESStargets.csv')
+outFrame = []
+go_scans['ingress'] = np.ones(len(go_scans['TIC ID']))
+go_scans['egress'] = np.ones(len(go_scans['TIC ID']))
+# go_scans['StartObs'] = np.ones(len(go_scans['TIC ID']))
+
+for ii in range(len(transitTimes['ticid'])):
+    
+    tic = transitTimes['ticid'][ii]
+    sess = transitTimes['session'][ii]
+
+    mask = np.where((go_scans['TIC ID'].to_numpy() == tic) & (go_scans['session'].to_numpy() == sess))[0]
+
+    if len(mask) >= numobs: # make sure target has 3 obs
+        
+        go_scans.iloc[mask, -2] = transitTimes['ingress'][ii]
+        go_scans.iloc[mask, -1] = transitTimes['egress'][ii]
+        # go_scans.iloc[mask, -1] = transitTimes['StartObs'][ii]
+        
+        outFrame.append(go_scans.iloc[mask])
+        
+times = pd.concat(outFrame)
+pd.options.display.float_format = '{:.10f}'.format
+#print(times[times.target_name == 'TIC121338379'])
+
+# Get observation end times
+totObsTime = 10/60/24 # days
+
+times['StartObs_max'] = times['StartObs']
+
+groupedTime = times.groupby(['target_name', 'receiver']).agg({
+    'StartObs': 'min',
+    'StartObs_max' : 'max',
+    'TIC ID' : 'min',
+    'session' : 'min',
+    'ingress' : 'min',
+    'egress' : 'min'
+}).reset_index()
+
+groupedTime['EndObs'] = groupedTime['StartObs_max'] + totObsTime
+
+print(groupedTime.EndObs - groupedTime.StartObs)
+
+# totObsTime = 30/60/24 # days
+# groupedTime = times.drop_duplicates(['target_name', 'receiver'])
+# withEnd = groupedTime.assign(EndObs = groupedTime['StartObs'] + totObsTime)
 
 # Return csv file and number of unique TESS targets found transiting
-#targets.to_csv(outFilePath)
-#print(f'{len(targets.target_name.unique())} TESS targets found in transit')
+groupedTime.to_csv('TransitTimes.csv')
+print(groupedTime)
+

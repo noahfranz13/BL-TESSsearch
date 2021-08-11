@@ -1,2 +1,4 @@
 TIC-query/locate-TIC-files/targets-location.csv
 run-turboSETI/connect-spreadsheet/*.json
+analysis/*.csv
+analysis/*.png
