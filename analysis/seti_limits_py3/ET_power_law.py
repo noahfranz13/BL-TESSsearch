@@ -590,7 +590,7 @@ def compare_SETI_limits(EIRP,rarity,shape='o',color='k',project='This Project',y
     if y_label_units:
         plt.ylabel('Transmitter Rate \n [log(1/(Nstars * rel_BW))]',fontsize=fontsize)
     else:
-       plt.ylabel('Transmitter Rate ',fontsize=fontsize)
+        plt.ylabel('Transmitter Rate ',fontsize=fontsize)
 
     plt.xticks(fontsize = ticksize)
     plt.yticks(fontsize = ticksize)

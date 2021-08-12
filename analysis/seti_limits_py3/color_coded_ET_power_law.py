@@ -564,30 +564,28 @@ def ET_power_law(verbose=False):
     graymooley, = plt.plot(np.log10(GM_EIRP),np.log10(1./GM_rarity),'o',color =LBand,markeredgecolor=XBand,markeredgewidth=2,markersize = markersize)
 
     # All of Harp observations were conducted at L-Band and S-Band
-    harpab, = plt.plot(np.log10(ATA_EIRP[0:2]),np.log10(1./ATA_rarity[0:2]),'^',color =LBand,markeredgecolor=SBand,markeredgewidth=2, markersize = markersize)
-    harpc, = plt.plot(np.log10(ATA_EIRP[2]),np.log10(1./ATA_rarity[2]),'s',color =LBand,markeredgecolor=SBand,markeredgewidth=2,markersize = markersize)
-    harpd, = plt.plot(np.log10(ATA_EIRP[3]),np.log10(1./ATA_rarity[3]),'h',color =LBand,markeredgecolor=SBand,markeredgewidth=2,markersize = markersize)
+    #harpab, = plt.plot(np.log10(ATA_EIRP[0:2]),np.log10(1./ATA_rarity[0:2]),'^',color =LBand,markeredgecolor=SBand,markeredgewidth=2, markersize = markersize)
+    #harpc, = plt.plot(np.log10(ATA_EIRP[2]),np.log10(1./ATA_rarity[2]),'s',color =LBand,markeredgecolor=SBand,markeredgewidth=2,markersize = markersize)
+    #harpd, = plt.plot(np.log10(ATA_EIRP[3]),np.log10(1./ATA_rarity[3]),'h',color =LBand,markeredgecolor=SBand,markeredgewidth=2,markersize = markersize)
     harpall1, = plt.plot(np.log10(ATA_EIRP[0]),np.log10(1./ATA_rarity_tot),marker='^', color=CBand,markersize = markersize,markeredgecolor=SBand,markeredgewidth=2,linestyle='None')
-    harpall2, = plt.plot(np.log10(ATA_EIRP[0:1]),np.log10(1./ATA_rarity[0:1]),marker='o', color=LBand, markeredgecolor=CBand)
-    harpall2, = plt.plot(np.log10(ATA_EIRP[0]),np.log10(1./ATA_rarity_tot),marker='^', color=LBand,markersize = markersize-2,linestyle='None')
+    #harpall2, = plt.plot(np.log10(ATA_EIRP[0:1]),np.log10(1./ATA_rarity[0:1]),marker='o', color=LBand, markeredgecolor=CBand)
+    #harpall2, = plt.plot(np.log10(ATA_EIRP[0]),np.log10(1./ATA_rarity_tot),marker='^', color=LBand,markersize = markersize-2,linestyle='None')
 
     siemion1, = plt.plot([np.log10(Siemion_EIRP)],[np.log10(1./Siemion_rarity)],'>',color =LBand,markersize = markersize, linestyle='None')
-    siemion2, = plt.plot([np.log10(Siemion_EIRP)],[np.log10(1./Siemion_rarity)],marker='o',color=LBand,markersize = dot_size, linestyle='None')
+    #siemion2, = plt.plot([np.log10(Siemion_EIRP)],[np.log10(1./Siemion_rarity)],marker='o',color=LBand,markersize = dot_size, linestyle='None')
 
-    phoenix, = plt.plot(np.log10(Ph_EIRP),np.log10(1./Ph_rarity),'<b',color=SBand,markersize = markersize)
+    #phoenix, = plt.plot(np.log10(Ph_EIRP),np.log10(1./Ph_rarity),'<b',color=SBand,markersize = markersize)
     phoenixall, = plt.plot([np.log10(Ph_EIRP_tot)],[np.log10(1./Ph_rarity_tot)],marker='<',color=SBand,markersize = markersize)
 
     horowitz_sagan, = plt.plot(np.log10(Horowitz_EIRP),np.log10(1./Horowitz_rarity),marker='s',color =SBand,markeredgecolor='w',markersize = markersize, linestyle='None')
-    valdez, = plt.plot(np.log10(Valdes_EIRP),np.log10(1./Valdes_rarity),'sy',color =LBand, markersize = markersize)
+    #valdez, = plt.plot(np.log10(Valdes_EIRP),np.log10(1./Valdes_rarity),'sy',color =LBand, markersize = markersize)
 
-    tarter, = plt.plot([np.log10(Tarter_EIRP)],[np.log10(1./Tarter_rarity)],'vc',color =LBand,markersize = markersize)
-    verschuur, = plt.plot(np.log10(Verschuur_EIRP),np.log10(1./Verschuur_rarity),'sm',color =LBand,markersize = markersize)
+    #tarter, = plt.plot([np.log10(Tarter_EIRP)],[np.log10(1./Tarter_rarity)],'vc',color =LBand,markersize = markersize)
+    #verschuur, = plt.plot(np.log10(Verschuur_EIRP),np.log10(1./Verschuur_rarity),'sm',color =LBand,markersize = markersize)
     mwa, = plt.plot(tremblay_EIRP_min, tremblay_transmitter_rate, marker='X', color='tab:purple', markersize=markersize, markeredgecolor='w', linestyle='None')#, linestyle='None')
 
-    #legend_handles = {'p1':price1, 'p2':price2, 'e':enriquez, 'gm':graymooley, 'h_a1':harpall1, 'h_a2':harpall2, 's1':siemion1, 'pha':phoenixall, 'hs':horowitz_sagan, 'm':mwa}
-    legend_handles = {'p1':price1, 'p2':price2, 'e':enriquez, 'gm':graymooley, 'h_ab':harpab, 'h_c':harpc, 'h_d':harpd, 'h_a1':harpall1, 'h_a2':harpall2, 's1':siemion1,
-                      's2':siemion2, 'ph':phoenix, 'pha':phoenixall, 'hs':horowitz_sagan, 'v':valdez, 't':tarter, 'ver':verschuur, 'm':mwa, 'arecibo':arecibo, 
-                      'solar':solarpower}
+    legend_handles = {'p1':price1, 'p2':price2, 'e':enriquez, 'gm':graymooley, 'h_a1':harpall1, 's1':siemion1, 'pha':phoenixall, 'hs':horowitz_sagan, 'm':mwa}
+    #legend_handles = {'p1':price1, 'p2':price2, 'e':enriquez, 'gm':graymooley, 'h_ab':harpab, 'h_c':harpc, 'h_d':harpd, 'h_a1':harpall1, 'h_a2':harpall2, 's1':siemion1,'s2':siemion2, 'ph':phoenix, 'pha':phoenixall, 'hs':horowitz_sagan, 'v':valdez, 't':tarter, 'ver':verschuur, 'm':mwa}
 
 #legend_handles = {'p1':price1, 'p2':price2, 'e':enriquez, 'gm':graymooley, 'h_ab':harpab, 'h_c':harpc, 'h_d':harpd, 'h_a1':harpall1, 'h_a2':harpall2, 's1':siemion1, 's2':siemion2, 'ph':phoenix, 'pha':phoenixall, 'hs':horowitz_sagan, 'v':valdez, 't':tarter, 'ver':verschuur}
     return legend_handles
